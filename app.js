@@ -35,7 +35,7 @@ const TREE = {
         title: 'Integridad Eléctrica',
         objective: 'Confirmar suministro de energía al equipo.',
         question: '¿La luz LED POWER está encendida y fija?',
-        leds: { power: 'on-green', los: 'off', pon: 'off', internet: 'off', wifi: 'off', lan: 'off' },
+        leds: { power: 'off' }, // Start OFF, only ON after "Yes"
         activeLed: 'POWER',
         options: [
             { label: 'Sí, está encendida', next: '2.0', type: 'success' },
@@ -95,11 +95,11 @@ const TREE = {
         title: 'Sincronismo de Fibra',
         objective: 'Verificar la llegada de señal óptica.',
         question: '¿La luz LOS está apagada?',
-        leds: { power: 'on-green', los: 'off', pon: 'off', internet: 'off' },
+        leds: { power: 'on-green', los: 'off' }, // LOS starts off in question
         activeLed: 'LOS',
         options: [
             { label: 'Sí, está apagada', next: '3.0', type: 'success' },
-            { label: 'No, está encendida', next: '2.1', type: 'danger' }
+            { label: 'No, está prendida', next: '2.1', type: 'danger' }
         ]
     },
     '2.1': {
@@ -136,7 +136,7 @@ const TREE = {
         title: 'Vinculación Lógica',
         objective: 'Confirmar el enlace con la central (OLT).',
         question: '¿La luz PON está verde y fija?',
-        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'off' },
+        leds: { power: 'on-green', los: 'off', pon: 'off' }, // PON unknown until confirmed
         activeLed: 'PON',
         options: [
             { label: 'Sí, está fija', next: 'MODE_BIFURCATION', type: 'success' },
@@ -191,7 +191,7 @@ const TREE = {
         title: 'Sesión de Datos',
         objective: 'Validar la navegación IP.',
         question: '¿La luz INTERNET está encendida?',
-        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-red' },
+        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'off' },
         activeLed: 'INTERNET',
         options: [
             { label: 'Sí, navega OK', next: '5.0', type: 'success' },
@@ -207,7 +207,7 @@ const TREE = {
         leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-green' },
         options: [
             { label: 'Sí, solucionado', next: '5.0', type: 'success' },
-            { label: 'No, derivar N2', next: 'ESCALATE_VISIT', type: 'danger' }
+            { label: 'No, derivar N2', next: '6.3_SUMMARY', type: 'danger' }
         ]
     },
 
@@ -271,6 +271,13 @@ const TREE = {
         case: 'DERIVACIÓN TÉCNICA',
         title: 'Visita Técnica / Campo',
         question: '¿Confirma envío de móvil a domicilio?',
+        options: [{ label: 'Confirmar', next: '6.3_SUMMARY', type: 'success' }]
+    },
+    'ESCALATE_COMMERCIAL': {
+        id: 'N2-COMERCIAL',
+        case: 'DERIVACIÓN COMERCIAL',
+        title: 'Gestión Administrativa',
+        question: '¿El cliente acepta ser derivado a Cobranzas?',
         options: [{ label: 'Confirmar', next: '6.3_SUMMARY', type: 'success' }]
     },
     'ERR_NO_POWER': {
