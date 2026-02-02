@@ -1,67 +1,73 @@
-# NS-STI: Motor de Diagnóstico FTTH (v3.0.0)
+# NS-STI: Motor de Diagnóstico FTTH (v5.8.0 Enterprise)
 ## El "Cerebro" del Proyecto - Manual Técnico y Guía de Arquitectura
 
-Bienvenido al repositorio autónomo de **NS-STI (Nuevo Siglo - Soporte Técnico Internet)**. Este documento sirve como Single Source of Truth para el entendimiento, mantenimiento y extensión de la herramienta de diagnóstico de Nivel 1.
+Bienvenido al repositorio de **NS-STI (Nuevo Siglo - Soporte Técnico Interactivo)**. Esta herramienta es el estándar de oro para el diagnóstico de Nivel 1 en despliegues FTTH, diseñada para garantizar una atención técnica uniforme, auditable y de alta precisión.
 
 ---
 
-## 1. Arquitectura del Flujo (Lógica Nodal)
-El sistema opera mediante un **Árbol de Decisiones Nodal** implementado en `app.js`. El flujo se divide en dos grandes fases:
+## 1. Arquitectura del Sistema
+El sistema es una **Single Page Application (SPA)** construida con **Vanilla JavaScript**, lo que garantiza portabilidad absoluta y ejecución instantánea en cualquier entorno de soporte sin dependencias externas.
 
-### A. Fase Lineal (Capas 1 a 4)
-Es la fase obligatoria de validación física y de transporte. Ningún técnico puede saltar estos pasos:
-- **Caso 0 (Triaje)**: Identificación de Modelo (ZTE) y Modo de Servicio (Standard/Bridge).
-- **Caso 1 (POWER)**: Validación de integridad eléctrica y fuentes de poder.
-- **Caso 2 (LOS)**: Validación física de la fibra óptica (Patchcord y Roseta).
-- **Caso 3 (PON)**: Validación de sincronismo lógico con la OLT.
-- **Caso 4 (INTERNET)**: Validación de sesión PPPoE y estado comercial.
-
-### B. Bifurcación de Responsabilidad
-- **Modo Standard**: Continúa hacia los Casos 5 (Wi-Fi) y 6 (Rendimiento/LAN). Soporte Full Stack gestionado por NS.
-- **Modo Bridge**: El flujo finaliza tras el Caso 3. Se activa la **Cláusula de Demarcación**, informando al abonado que la red privada depende de su router propio.
-
-### C. Fase Iterativa (Capas 5 y 6)
-Validación de la experiencia final del usuario a través de bucles de prueba en múltiples dispositivos y test de velocidad (Speedtest).
+### Componentes Clave:
+- **Motor Nodal (`app.js`)**: Gestiona un árbol de decisiones (`TREE`) con soporte para bifurcaciones lógicas dinámicas.
+- **Estado Persistente**: Utiliza `localStorage` para recuperar sesiones en caso de recarga accidental.
+- **Sistema de Auditoría**: Registra cada interacción (Pregunta -> Respuesta) con marcas de tiempo para su posterior volcado en el CRM.
 
 ---
 
-## 2. Diccionario de Hardware
-El sistema es adaptativo según el modelo seleccionado en el Nodo Maestro:
+## 2. Flujo Operativo de Trabajo
 
-| Modelo | Descripción Visual | Activos del Sistema |
-| :--- | :--- | :--- |
-| **ZTE F6600** | 4 Antenas redondas | Carga `assets/node_1_2_button_f6600.png` y similares. |
-| **ZTE F1611A** | 2 Antenas planas | Ajusta diagramas de botones y disposición de LEDs. |
+### Fase I: Identificación y Triage
+1. **Acceso Técnico**: El operador debe identificarse con su usuario de red.
+2. **Identificación del Abonado**: Registro obligatorio del Nro. de Contrato.
+3. **Perfilado de Hardware**:
+   - **Modelos**: ZTE F6600 (4 antenas) o ZTE F1611A (2 antenas).
+   - **Modos**: Standard (Soporte NS Full) o Bridge (Demarcación en Capa 3).
 
-> [!NOTE]
-> Las variables de hardware aseguran que el técnico guíe al cliente con la descripción física exacta del equipo que tiene enfrente.
-
----
-
-## 3. Protocolos de Escalamiento
-
-### Nivel 2 (Presencial - Despacho)
-- **Criterio**: Falla física de hardware (Módem no enciende tras 5 pruebas) o señal de fibra interrumpida (LOS rojo tras limpieza).
-- **Acción**: El sistema genera un resumen solicitando visita técnica.
-
-### Nivel 3 (Lógico - Ingeniería)
-- **Ledefyl (26262680)**: Reaprovisionamiento lógico (PON parpadea) o reconfiguración de discado (INTERNET apagado).
-- **Soporte L3 NS**: Análisis avanzado de latencia, saturación de canales Wi-Fi o problemas de DNS.
+### Fase II: Diagnóstico por Capas
+El motor guía al técnico a través del modelo OSI simplificado para FTTH:
+- **Capa 1 (Energía)**: Integridad eléctrica y encendido físico.
+- **Capa 2 (Óptica/LOS)**: Validación de señal física, limpieza y conexión de patchcord/roseta.
+- **Capa 3 (Enlace/PON)**: Sincronismo lógico con la OLT.
+- **Capa 4 (Servicio/INTERNET)**: Sesión PPPoE, estado comercial (deuda) y gestión con Ledefyl (N3).
+- **Capa 5/6 (Experiencia/WIFI/LAN)**: Validación de conectividad inalámbrica, cableada y pruebas de rendimiento.
 
 ---
 
-## 4. Guía de Mantenimiento para Futuros Agentes
+## 3. Características de la Edición Enterprise
 
-### Cómo añadir un nuevo Módem (Ej. Huawei)
-1. Abrir `app.js` y localizar el `diagnosticTree['0.2'].hardwareOptions`.
-2. Añadir el nuevo objeto: `{ id: 'huawei_eg8145', label: 'Huawei EG8145', desc: 'Antenas integradas' }`.
-3. Mapear las nuevas imágenes en los nodos descriptivos (`images_grid`).
+### Resumen CRM Dinámico
+Al finalizar cada gestión, el sistema genera un bloque de texto estructurado listo para copiar y pegar en el CRM corporativo, incluyendo:
+- Metadatos de la sesión (Operador, Abonado, Equipo, Tiempos).
+- **Log de Pasos**: Detalle cronológico de cada paso ejecutado y la respuesta del cliente.
+- **ID de Cierre**: Categorización automática del resultado (ej. `ESCALATE_VISIT`, `CASE_BRIDGE`, `CIERRE-ELECTRICO`).
 
-### Cómo modificar scripts de diálogo
-Los diálogos están contenidos en las propiedades `question` e `instruction` de cada nodo. Puede editarlos directamente sin alterar la lógica de navegación (`nextStep`).
+### Monitor de LEDs Interactivo
+En la parte inferior de la interfaz, un panel visual muestra el estado teórico de los LEDs del módem en tiempo real, reflejando las comprobaciones que el técnico va validando con el cliente.
 
-### Compatibilidad
-El código utiliza **Vanilla JavaScript (ES6)**. No añada dependencias de Node.js ni frameworks externos para asegurar que el archivo funcione abriéndolo directamente desde el explorador de archivos en cualquier PC de soporte.
+### Protocolos de Escalamiento
+- **Nivel 2 (Visita Técnica)**: Activado automáticamente ante fallas físicas insalvables o roturas de fibra.
+- **Nivel 3 (Ingeniería/Ledefyl)**: Guía específica para coordinar con el centro de gestión de red (Tels: 26262680).
 
 ---
-**Desarrollado para Nuevo Siglo - Gold Master Edition v3.0.0**
+
+## 4. Guía para Desarrolladores y Mantenedores
+
+### Añadir nuevos Nodos o Modelos
+- **Módems**: Modificar el objeto `CONFIG.MODELS` en `app.js`.
+- **Lógica**: Los nodos pueden ser de tipo `logic` (usando una función `condition` para decidir el siguiente paso basándose en el estado de la aplicación).
+- **Estilos**: El archivo `styles.css` utiliza variables CSS (`:root`) para facilitar cambios de branding rápidos.
+
+### Seguridad y Validación
+- Se implementó una sanitización básica de entradas para el Usuario Técnico y Nro. de Abonado.
+- El sistema impide el avance si no se completan los campos obligatorios del Triage.
+
+---
+
+## 5. Requisitos de Ejecución
+- **Navegador**: Chrome, Edge o Firefox (Versiones actualizadas).
+- **Instalación**: No requiere. Abrir `index.html` directamente.
+- **Compatibilidad**: Diseñado para funcionar en resoluciones de escritorio estándar en centros de atención telefónica.
+
+---
+**Desarrollado para Nuevo Siglo - Enterprise Gold Edition v5.8.0**
