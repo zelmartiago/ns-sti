@@ -324,9 +324,11 @@ const TREE = {
     },
     'ERR_NO_POWER': {
         id: 'CIERRE-ELECTRICO',
-        title: 'Cierre por Falta de Suministro',
-        question: '¿El cliente comprendió que debe esperar a que vuelva la luz?',
-        options: [{ label: 'Cerrar Llamada', next: '6.3_SUMMARY', type: 'success' }]
+        title: 'Asistencia por Falta de Energía',
+        objective: 'Informar canales de contacto de UTE y finalizar gestión.',
+        action: 'Indique al cliente: “En caso de persistir la falta de energía, comuníquese con Telegestiones UTE al 0800 1930 o *1930 desde su celular”.',
+        question: '¿Se brindó la información de contacto de UTE?',
+        options: [{ label: 'Finalizar Gestión', next: '6.3_SUMMARY', type: 'success' }]
     }
 };
 
