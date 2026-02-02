@@ -328,7 +328,7 @@ const TREE = {
         objective: 'Confirmar que la red inalámbrica esté activa en el módem.',
         action: 'Referencias:<br>• Encendida: Red activa y disponible.<br>• Apagada/Parpadeando: Problema de configuración o hardware.',
         question: '¿La luz LED Wi-Fi está encendida y fija?',
-        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-green', wifi: 'off' },
+        leds: { wifi: 'off' },
         activeLed: 'WIFI',
         options: [
             { label: 'Sí, encendida', next: '5.2', type: 'success' },
@@ -341,11 +341,11 @@ const TREE = {
         objective: 'Encender la red inalámbrica mediante el botón físico del equipo.',
         action: 'Indique al cliente: “Presione el botón blanco WPS/Wi-Fi en el lateral de la terminal por un segundo”.',
         question: '¿La luz LED Wi-Fi encendió ahora?',
-        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-green', wifi: 'off' },
+        leds: { wifi: 'off' },
         activeLed: 'WIFI',
         options: [
             { label: 'Sí, encendió', next: '5.2', type: 'success' },
-            { label: 'No enciende', next: 'ESCALATE_VISIT', type: 'danger' }
+            { label: 'No enciende', next: 'ESCALATE_WIFI', type: 'danger' }
         ]
     },
     '5.2': {
@@ -354,7 +354,7 @@ const TREE = {
         objective: 'Vincular el dispositivo del cliente a la red inalámbrica del servicio.',
         action: 'Indique al cliente: “Utilice las credenciales de autenticación (nombre de red y contraseña) para conectarse a su red”.',
         question: '¿Logró conectarse exitosamente a la red?',
-        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-green', wifi: 'on-green' },
+        leds: { wifi: 'on-green' },
         activeLed: 'WIFI',
         options: [
             { label: 'Sí, conectado', next: '5.4', type: 'success' },
@@ -367,10 +367,10 @@ const TREE = {
         objective: 'Configurar parámetros SSID/Password vía interfaz web interna.',
         action: 'Requiere: PC + Cable Ethernet.<br>1. Conecte PC al puerto LAN del módem.<br>2. En Navegador: http://192.168.1.1 (User: user / Pass: user1234).<br>3. Local Network -> WLAN -> WLAN SSID Configuration.<br>4. Cambie Nombre y Contraseña, guarde y reinicie equipo.',
         question: '¿Logró recuperar el acceso tras este procedimiento?',
-        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-green', wifi: 'on-green' },
+        leds: { wifi: 'on-green' },
         options: [
             { label: 'Sí, acceso recuperado', next: '5.4', type: 'success' },
-            { label: 'Falla persistente', next: 'ESCALATE_VISIT', type: 'danger' }
+            { label: 'Falla persistente', next: 'ESCALATE_WIFI', type: 'danger' }
         ]
     },
     '5.4': {
@@ -391,10 +391,10 @@ const TREE = {
         title: 'Puertos Ethernet',
         objective: 'Validar cableado estructurado del cliente.',
         question: '¿Si conecta una PC por cable, tiene luz en el puerto?',
-        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-green', wifi: 'on-green', lan: 'on-green' },
+        leds: { lan: 'off' },
         activeLed: 'LAN',
         options: [
-            { label: 'Sí, puerto OK', next: '6.1', type: 'success' },
+            { label: 'Sí, puerto OK', next: '5.4', type: 'success' },
             { label: 'No detecta cable', next: 'ESCALATE_VISIT', type: 'danger' }
         ]
     },
@@ -402,7 +402,7 @@ const TREE = {
         id: '6.1',
         title: 'Cierre con Satisfacción',
         objective: 'Auditoría final de servicio.',
-        action: 'Indique al cliente que navegue a <a href="https://www.nuevosiglo.com.uy/" target="_blank">www.nuevosiglo.com.uy</a> para validar carga. Luego realice un Speedtest en <a href="https://www.speedtest.net/" target="_blank">www.speedtest.net</a>.',
+        action: 'Validar navegación en <a href="https://www.nuevosiglo.com.uy/" target="_blank">www.nuevosiglo.com.uy</a> y realizar prueba de velocidad en <a href="https://www.speedtest.net/" target="_blank">www.speedtest.net</a>.',
         question: '¿Los resultados son conformes y acordes al plan?',
         options: [{ label: 'Finalizar Gestión', next: '6.3_SUMMARY', type: 'success' }]
     },
@@ -428,6 +428,15 @@ const TREE = {
         action: 'Indique al cliente: “Su servicio se encuentra suspendido. Para restaurar la conexión, debe actualizar su situación económica mediante los canales de cobro habilitados”.',
         question: '¿El cliente comprendió que debe regularizar su pago para recuperar el servicio?',
         options: [{ label: 'Sí, Finalizar gestión', next: '6.3_SUMMARY', type: 'success' }]
+    },
+    'ESCALATE_WIFI': {
+        id: 'N2-WIFI',
+        case: 'CASO 5: ESCALAMIENTO N2',
+        title: 'Fallas en el Wi-Fi',
+        objective: 'Falla persistente en la radio inalámbrica.',
+        action: 'En caso de tener fallas con la radio Wi-Fi, este caso debe derivarse a soporte técnico de segundo nivel. Prepare y registre la información relevante de la atención durante la llamada.',
+        question: '¿Confirma coordinación de visita técnica por falla Wi-Fi?',
+        options: [{ label: 'Confirmar Visita Técnica', next: '6.3_SUMMARY', type: 'success' }]
     },
     'ERR_NO_POWER': {
         id: 'CIERRE-ELECTRICO',
@@ -653,7 +662,8 @@ class App {
                 <div class="dialogue-bubble"><p class="dialogue-text">${step.question}</p></div>
                 <div class="actions">
                     ${(step.options || []).map(opt => `
-                        <button class="btn btn-${opt.type === 'success' ? 'yes' : 'no'}" onclick="app.dispatch('NAVIGATE', '${opt.next}')">
+                        <button class="btn ${opt.type === 'neutral' ? 'btn-neutral' : (opt.type === 'success' ? 'btn-yes' : 'btn-no')}" 
+                                onclick="app.dispatch('NAVIGATE', '${opt.next}')">
                             ${opt.label}
                         </button>
                     `).join('')}
@@ -679,25 +689,24 @@ class App {
         const div = document.createElement('div');
         div.className = 'view';
         div.innerHTML = `
-            <div class="diagnostic-box" style="border-color: var(--danger);">
-                <div class="case-indicator" style="color: var(--danger); border-bottom-color: rgba(239, 68, 68, 0.2);">
+            <div class="diagnostic-box">
+                <div class="case-indicator">
                     <span>${step.case}</span>
                     <span>PROTOCOLO AGOTADO</span>
                 </div>
                 
-                <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid var(--danger); border-radius: var(--radius-md); padding: 1.5rem; margin: 1rem 0;">
-                    <h3 style="color: var(--danger); margin-bottom: 0.5rem; font-size: 1rem;">MOTIVO DE LA VISITA:</h3>
-                    <p style="font-size: 1.2rem; font-weight: 700; color: var(--text-main);">${reason}</p>
+                <div class="instruction-card" style="border-style: solid; border-color: var(--secondary); background: rgba(var(--secondary-rgb), 0.03);">
+                    <h3 style="color: var(--secondary); margin-bottom: 0.25rem; font-size: 0.8rem; font-weight: 800;">MOTIVO DE LA DERIVACIÓN:</h3>
+                    <p class="instruction-text" style="font-size: 1.1rem;">${reason}</p>
                 </div>
 
-                <div class="dialogue-bubble" style="background: var(--secondary); margin-bottom: 1rem;">
+                <div class="dialogue-bubble">
                     <p class="dialogue-text">${step.question}</p>
                 </div>
 
                 <div class="actions">
                     ${(step.options || []).map(opt => `
-                        <button class="btn btn-yes" style="background: var(--danger);" 
-                                onclick="app.dispatch('NAVIGATE', '${opt.next}')">
+                        <button class="btn btn-yes" onclick="app.dispatch('NAVIGATE', '${opt.next}')">
                             ${opt.label}
                         </button>
                     `).join('')}

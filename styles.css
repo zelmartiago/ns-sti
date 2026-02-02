@@ -278,6 +278,22 @@ body {
     box-shadow: 0 0px 0px #c53030;
 }
 
+.btn-neutral {
+    background: #64748b;
+    color: white;
+    box-shadow: 0 4px 0px #475569;
+}
+
+.btn-neutral:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0px #475569;
+}
+
+.btn-neutral:active {
+    transform: translateY(2px);
+    box-shadow: 0 0px 0px #475569;
+}
+
 .btn-back {
     background: var(--secondary);
     color: white;
