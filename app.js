@@ -481,7 +481,9 @@ class App {
 
     dispatch(action, data) {
         if (action === 'NAVIGATE') {
-            const nextNodeId = data;
+            const currentStep = TREE[this.state.node];
+            const nextNodeId = typeof data === 'string' ? data : data.id;
+            const choiceLabel = typeof data === 'object' ? data.label : null;
             const target = TREE[nextNodeId];
             if (!target) return;
 
@@ -491,11 +493,16 @@ class App {
                 return;
             }
 
+            // LOG DETAIL: Captures Question -> Answer
+            if (currentStep && choiceLabel && currentStep.question) {
+                const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                this.state.logs.push(`[${time}] ${currentStep.title || currentStep.id}: ${currentStep.question} -> R: ${choiceLabel}`);
+            } else if (target.case || target.title) {
+                this.state.logs.push(`${new Date().toLocaleTimeString()} - Iniciando: ${target.case || target.title}`);
+            }
+
             this.state.history.push(this.state.node);
             this.state.node = nextNodeId;
-            if (target.case || target.title) {
-                this.state.logs.push(`${new Date().toLocaleTimeString()} - ${target.case || target.title}`);
-            }
         }
 
         if (action === 'SET_SUBSCRIBER') {
@@ -587,7 +594,7 @@ class App {
                 <h1 style="font-size: 2.2rem; margin-bottom: 1rem;">${step.title}</h1>
                 <p style="color: var(--text-muted); margin-bottom: 3rem;">${step.desc}</p>
                 <button class="btn btn-yes" style="margin: 0 auto;" 
-                        onclick="app.dispatch('NAVIGATE', '${step.next}')">
+                        onclick="app.dispatch('NAVIGATE', {id: '${step.next}', label: 'Acceder'})">
                     Acceder al Panel
                 </button>
             </div>
@@ -641,7 +648,7 @@ class App {
                     <div id="validation-msg" class="validation-msg">${!isReady ? `Falta cargar: ${missing.join(', ')}` : ''}</div>
                     <button id="triage-start-btn" class="btn btn-yes" style="margin: 0.5rem auto 0;"
                             ${!isReady ? 'disabled' : ''}
-                            onclick="app.dispatch('NAVIGATE', '${step.next}')">
+                            onclick="app.dispatch('NAVIGATE', {id: '${step.next}', label: 'Confirmar Datos'})">
                         Comenzar Diagnóstico
                     </button>
                 </div>
@@ -663,7 +670,7 @@ class App {
                 <div class="actions">
                     ${(step.options || []).map(opt => `
                         <button class="btn ${opt.type === 'neutral' ? 'btn-neutral' : (opt.type === 'success' ? 'btn-yes' : 'btn-no')}" 
-                                onclick="app.dispatch('NAVIGATE', '${opt.next}')">
+                                onclick="app.dispatch('NAVIGATE', {id: '${opt.next}', label: '${opt.label}'})">
                             ${opt.label}
                         </button>
                     `).join('')}
@@ -706,7 +713,7 @@ class App {
 
                 <div class="actions">
                     ${(step.options || []).map(opt => `
-                        <button class="btn btn-yes" onclick="app.dispatch('NAVIGATE', '${opt.next}')">
+                        <button class="btn btn-yes" onclick="app.dispatch('NAVIGATE', {id: '${opt.next}', label: '${opt.label}'})">
                             ${opt.label}
                         </button>
                     `).join('')}
@@ -752,7 +759,10 @@ ${this.state.logs.join('\n')}
         const isTechnicalNode = this.state.node !== '0.1' && this.state.node !== '0.2' && step.type !== 'final';
         const f = document.createElement('footer');
         f.className = 'app-footer';
-        const leds = ['POWER', 'LOS', 'PON', 'INTERNET', 'WIFI', 'LAN'];
+        let leds = ['POWER', 'LOS', 'PON', 'INTERNET', 'WIFI', 'LAN'];
+        if (this.state.mode === 'Bridge') {
+            leds = leds.filter(l => l !== 'INTERNET' && l !== 'WIFI');
+        }
 
         // RECALCULATE KNOWN LEDS DYNAMICALLY FROM CURRENT PATH
         let knownLeds = {};
@@ -768,7 +778,6 @@ ${this.state.logs.join('\n')}
                 ${leds.filter(l => knownLeds.hasOwnProperty(l.toLowerCase())).map(l => {
             const key = l.toLowerCase();
             let status = knownLeds[key] || 'off';
-            if (this.state.mode === 'Bridge' && (l === 'INTERNET' || l === 'WIFI')) status = 'disabled';
             const isEvaluating = step.activeLed === l;
             return `
                         <div class="led-item">
