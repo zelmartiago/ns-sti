@@ -609,24 +609,25 @@ class App {
                     <p>SOPORTE TÉCNICO INTERACTIVO</p>
                 </div>
             </div>
-            <div class="header-status">
-                ${this.state.node !== '0.1' ? `
-                    <div style="display: flex; align-items: center; gap: 1rem; justify-content: flex-end;">
-                        ${this.state.node !== '0.2' && step.type !== 'final' ? `
-                            <button class="btn btn-no" style="min-width: unset; padding: 4px 10px; font-size: 0.65rem; box-shadow: 0 2px 0 #c53030;" 
-                                    onclick="app.dispatch('ABORT_SESSION')">ABORTAR LLAMADA</button>
-                        ` : ''}
-                        <div>
-                            <div class="header-badges">
-                                <span class="badge">ID: ${this.state.subscriberId || 'N/A'}</span>
-                                <span class="badge">${this.state.model || '?'}</span>
-                                <span class="badge">${this.state.mode || '?'}</span>
-                            </div>
-                            <div class="node-id"># ${step.id}</div>
+            
+            ${this.state.node !== '0.1' ? `
+                <div class="header-controls">
+                    ${this.state.node !== '0.2' && step.type !== 'final' ? `
+                        <button class="btn-abort" onclick="app.dispatch('ABORT_SESSION')">
+                            <span>⚠️</span> ABORTAR LLAMADA
+                        </button>
+                    ` : ''}
+                    
+                    <div class="status-monitor">
+                        <div class="header-badges">
+                            <span class="badge">ID: ${this.state.subscriberId || 'N/A'}</span>
+                            <span class="badge">${this.state.model || '?'}</span>
+                            <span class="badge">${this.state.mode || '?'}</span>
                         </div>
+                        <div class="node-id">NODO: ${step.id}</div>
                     </div>
-                ` : '<span class="badge">SISTEMA LISTO</span>'}
-            </div>
+                </div>
+            ` : '<div class="header-status"><span class="badge">SISTEMA LISTO</span></div>'}
         `;
         this.mount.appendChild(header);
 
