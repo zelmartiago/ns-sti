@@ -1,6 +1,6 @@
 /**
  * NS-STI Final High-Fidelity Diagnostic Engine
- * v1.6.0 - Case 2 formalized (Nodes 2.1 - 2.3)
+ * v1.9.0 - Case 4 refined & Case 5 implemented (Wi-Fi & Connectivity)
  */
 
 const diagnosticTree = {
@@ -160,7 +160,7 @@ const diagnosticTree = {
         activeLED: 'PON',
         options: [
             { label: 'No', nextStep: '2.1' },
-            { label: 'Si', nextStep: 'finish_call' }
+            { label: 'Si', nextStep: '3.1' }
         ]
     },
     '2.1': {
@@ -207,7 +207,7 @@ const diagnosticTree = {
         leds: { power: 'green', los: 'red', pon: 'eval', internet: 'off' },
         activeLED: 'LOS',
         options: [
-            { label: 'No', nextStep: 'coordinar_visita' },
+            { label: 'No', nextStep: 'coordinar_visita_los' },
             { label: 'Si', nextStep: 'sync_check' }
         ]
     },
@@ -225,17 +225,387 @@ const diagnosticTree = {
         type: 'images_grid',
         images: ['assets/node_2_3_roseta.png']
     },
-    'coordinar_visita': {
-        id: 'coordinar_visita',
-        title: 'Fallas en el encendido',
+    'coordinar_visita_los': {
+        id: 'coordinar_visita_los',
+        title: 'Fallas en el encendido / Falla en LOS',
         procedure: 'Coordinar visita técnica',
         objective: 'Derivar el caso con Despacho.',
-        instruction: 'En caso de tener fallas en el encendido del módem derivar el caso con Despacho.',
+        instruction: 'En caso de tener fallas en el encendido o en la señal de fibra derivar el caso con Despacho.',
         action: 'Preparar y registrar la información relevante de la atención durante la llamada.',
         question: '',
         options: [
             { label: 'Coordinar visita técnica', nextStep: '0.1' }
         ]
+    },
+    '3.1': {
+        id: '3.1',
+        title: 'Verificación de luz LED PON',
+        procedure: 'Caso 3: PON > Validación de Estado',
+        objective: 'confirmar que el módem/ONT está sincronizado con la red FTTH de Nuevo Siglo.',
+        instruction: '<strong>Interpretación de estados:</strong><br><strong>Encendida y fija:</strong> la conexión con la red óptica es correcta.<br><strong>Apagada o parpadeando:</strong> puede existir un problema en la señal óptica o en la conexión del ONT.',
+        question: '“¿La luz que dice \'PON\' se encuentra encendida fija o está parpadeando?”',
+        hasDescriptiveImage: true,
+        descriptiveImageStep: 'pon_check_images',
+        leds: { power: 'green', los: 'off', pon: 'eval', internet: 'off' },
+        activeLED: 'PON',
+        options: [
+            { label: 'Fija', nextStep: '4.1' },
+            { label: 'Parpadea / Apagada', nextStep: '3.2' }
+        ]
+    },
+    'pon_check_images': {
+        id: 'pon_check_images',
+        title: 'Guía Visual: Estado PON/LOS',
+        procedure: 'Ayuda Visual',
+        type: 'images_grid',
+        images: ['assets/node_3_1_pon_check.png']
+    },
+    '3.2': {
+        id: '3.2',
+        title: 'Reinicio del módem',
+        procedure: 'Caso 3: PON > Resolución paso 1',
+        objective: 'reiniciar el módem para restablecer la conexión FTTH.',
+        action: '<strong>Indica al cliente:</strong> “Presione el botón rojo ON/OFF en la parte trasera para apagar y volver a encender el equipo.”<br><strong>Alternativa:</strong> desconectar y volver a conectar el cable de energía del módem.<br>Espere 30 segundos después del reinicio para que el módem se estabilice.',
+        question: '“¿Luego del reinicio, la luz LED PON quedó encendida y fija?”',
+        hasDescriptiveImage: true,
+        descriptiveImageStep: 'pon_restart_images',
+        leds: { power: 'green', los: 'off', pon: 'eval', internet: 'off' },
+        activeLED: 'PON',
+        options: [
+            { label: 'No', nextStep: '3.3' },
+            { label: 'Si', nextStep: '4.1' }
+        ]
+    },
+    'pon_restart_images': {
+        id: 'pon_restart_images',
+        title: 'Guía Visual: Reinicio del Equipo',
+        procedure: 'Ayuda Visual',
+        type: 'images_grid',
+        images: ['assets/node_3_2_restart.png']
+    },
+    '3.3': {
+        id: '3.3',
+        title: 'Escalamiento No Disruptivo (Ledefyl)',
+        procedure: 'Caso 3: PON > Resolución paso 2',
+        objective: 'Coordinar acciones de reaprovisionamiento lógico.',
+        instruction: 'Si tras el reinicio el LED PON sigue parpadeando, el agente debe solicitar a Ledefyl la ejecución de un Reaprovisionamiento del equipo en el sistema.',
+        action: 'Solicite reaprovisionamiento a Ledefyl y espere la confirmación de ejecución.',
+        question: '¿Se confirmó la ejecución del reaprovisionamiento?',
+        leds: { power: 'green', los: 'off', pon: 'eval', internet: 'off' },
+        activeLED: 'PON',
+        options: [
+            { label: 'Confirmado', nextStep: '3.4' }
+        ]
+    },
+    '3.4': {
+        id: '3.4',
+        title: 'Verificación Post-Reaprovisionamiento',
+        procedure: 'Caso 3: PON > Resolución paso 3',
+        objective: 'Validar si la acción remota tuvo éxito.',
+        question: '“¿Luego del ajuste que realizamos, la luz PON quedó fija?”',
+        leds: { power: 'green', los: 'off', pon: 'eval', internet: 'green' },
+        activeLED: 'PON',
+        options: [
+            { label: 'No', nextStep: 'coordinar_visita_pon' },
+            { label: 'Si', nextStep: '4.1' }
+        ]
+    },
+    'coordinar_visita_pon': {
+        id: 'coordinar_visita_pon',
+        title: 'Coordinar visita técnica por LED PON',
+        procedure: 'Escalamiento por falla lógica',
+        objective: 'Derivar el caso a segundo nivel.',
+        instruction: 'Si el reaprovisionamiento de Ledefyl no soluciona el parpadeo del LED PON, se debe derivar el caso a segundo nivel para una visita técnica en domicilio por falla de sincronismo.',
+        action: '<strong>IMPORTANTE:</strong> Es obligatorio dejar constancia en el ticket de que se realizó el paso por Ledefyl sin éxito.',
+        question: '',
+        options: [
+            { label: 'Finalizar y Registrar Ticket', nextStep: '0.1' }
+        ]
+    },
+    '4.1': {
+        id: '4.1',
+        title: 'Verificación de luz LED INTERNET',
+        procedure: 'Caso 4: INTERNET > Validación Inicial',
+        objective: 'confirmar que el servicio de internet esté activo en el módem mediante la comprobación de la sesión PPPoE.',
+        instruction: '<strong>Interpretación de estados:</strong><br><strong>Encendida o parpadeando:</strong> el módem tiene conexión activa a internet.<br><strong>Apagada:</strong> puede haber un problema de aprovisionamiento, sincronización o red.',
+        question: '“¿La luz que dice \'INTERNET\' se encuentra encendida fija o parpadeando?”',
+        hasDescriptiveImage: true,
+        descriptiveImageStep: 'internet_check_images',
+        leds: { power: 'green', los: 'off', pon: 'green', internet: 'eval' },
+        activeLED: 'INTERNET',
+        options: [
+            { label: 'Fija / Parpadeante', nextStep: '4.3' },
+            { label: 'Apagada', nextStep: '4.2_commercial' }
+        ]
+    },
+    'internet_check_images': {
+        id: 'internet_check_images',
+        title: 'Guía Visual: Estado INTERNET',
+        procedure: 'Ayuda Visual',
+        type: 'images_grid',
+        images: ['assets/node_4_1_internet_check.png']
+    },
+    '4.2_commercial': {
+        id: '4.2_commercial',
+        title: 'Verificación del estado financiero comercial',
+        procedure: 'Resolución caso INTERNET - Paso 1',
+        objective: 'comprobar que el servicio de Internet del cliente no esté suspendido por impagos.',
+        action: '<strong>Operador:</strong> revisar en el sistema comercial si existen suspensiones por impagos.<br><strong>Cliente:</strong> usar manejo de la espera mientras se verifica la información.',
+        question: '“¿El cliente se encuentra al día con sus pagos y el servicio activo?”',
+        hasDescriptiveImage: true,
+        descriptiveImageStep: 'commercial_check_images',
+        leds: { power: 'green', los: 'off', pon: 'green', internet: 'eval' },
+        activeLED: 'INTERNET',
+        options: [
+            { label: 'Si (Al día)', nextStep: '4.2_restart' },
+            { label: 'No (Suspendido)', nextStep: 'error_commercial_debt' }
+        ]
+    },
+    'commercial_check_images': {
+        id: 'commercial_check_images',
+        title: 'Guía Visual: Estado Comercial',
+        procedure: 'Ayuda Visual',
+        type: 'images_grid',
+        images: ['assets/node_4_3_commercial_check.png']
+    },
+    'error_commercial_debt': {
+        id: 'error_commercial_debt',
+        title: 'ERROR: Cliente suspendido por estado comercial',
+        procedure: 'Cierre por deuda',
+        objective: 'Finalizar diagnóstico por suspensión comercial.',
+        headerInfo: 'Servicio suspendido',
+        question: 'Se debe informar al cliente sobre su situación comercial y transferir al área correspondiente.',
+        options: [
+            { label: 'Finalizar diagnóstico', nextStep: '0.1' }
+        ]
+    },
+    '4.2_restart': {
+        id: '4.2_restart',
+        title: 'Reinicio del módem para verificar INTERNET',
+        procedure: 'Resolución caso INTERNET - Paso 2',
+        objective: 'reiniciar el módem para restablecer la conexión de Internet.',
+        action: '<strong>Indica al cliente:</strong> “Presione el botón rojo ON/OFF en la parte trasera para apagar y volver a encender el equipo.”<br><strong>Alternativa:</strong> desconectar y volver a conectar el cable de energía del módem.<br>Espere 30 segundos después del reinicio para que el módem se estabilice.',
+        question: '“¿La luz LED INTERNET está encendida o parpadeando?”',
+        hasDescriptiveImage: true,
+        descriptiveImageStep: 'internet_restart_images',
+        leds: { power: 'green', los: 'off', pon: 'green', internet: 'eval' },
+        activeLED: 'INTERNET',
+        options: [
+            { label: 'No', nextStep: '4.2_ledefyl' },
+            { label: 'Si', nextStep: '4.3' }
+        ]
+    },
+    'internet_restart_images': {
+        id: 'internet_restart_images',
+        title: 'Guía Visual: Reinicio INTERNET',
+        procedure: 'Ayuda Visual',
+        type: 'images_grid',
+        images: ['assets/node_4_2_restart_internet.png']
+    },
+    '4.2_ledefyl': {
+        id: '4.2_ledefyl',
+        title: 'Verificación de discado PPPoE',
+        procedure: 'Resolución caso INTERNET - Paso 3',
+        objective: 'comprobar junto a ledefyl si estan bien las credenciales del discado PPPoE.',
+        action: '<strong>Operador:</strong> llamar al 26262680 (Ledefyl) y comunicarle:<br><div style="font-style: italic; margin-top: 10px; border-left: 3px solid #ccc; padding-left: 10px;">“El servicio es el número xx-xx, LED INTERNET no enciende, LED POWER está encendida, LED LOS está apagada y LED PON está encendida. Por favor comprueben desde su parte si ven algo fuera de lo esperado”</div><br><strong>Para el Cliente:</strong> usar manejo de la espera durante el proceso.',
+        question: '',
+        hasDescriptiveImage: true,
+        descriptiveImageStep: 'ledefyl_call_images',
+        leds: { power: 'green', los: 'off', pon: 'green', internet: 'eval' },
+        activeLED: 'INTERNET',
+        options: [
+            { label: 'Continuar', nextStep: '4.2_verify' }
+        ]
+    },
+    'ledefyl_call_images': {
+        id: 'ledefyl_call_images',
+        title: 'Guía Visual: Llamada a Ledefyl',
+        procedure: 'Ayuda Visual',
+        type: 'images_grid',
+        images: ['assets/node_4_2_ledefyl_call.png']
+    },
+    '4.2_verify': {
+        id: '4.2_verify',
+        title: 'Post verificación de discado PPPoE',
+        procedure: 'Resolución caso INTERNET - Paso 3 (cont.)',
+        objective: 'comprobar las credenciales del discado PPPoE fueron reacomodadas en el procedimiento previo.',
+        question: '“¿La luz LED INTERNET está encendida o parpadeando?”',
+        hasDescriptiveImage: true,
+        descriptiveImageStep: 'pppoe_verify_images',
+        leds: { power: 'green', los: 'off', pon: 'green', internet: 'eval' },
+        activeLED: 'INTERNET',
+        options: [
+            { label: 'No', nextStep: 'coordinar_visita_internet' },
+            { label: 'Si', nextStep: '4.3' }
+        ]
+    },
+    'pppoe_verify_images': {
+        id: 'pppoe_verify_images',
+        title: 'Guía Visual: Post Verificación PPPoE',
+        procedure: 'Ayuda Visual',
+        type: 'images_grid',
+        images: ['assets/node_4_2_verify_pppoe.png']
+    },
+    '4.3': {
+        id: '4.3',
+        title: 'Comprobación de Navegación',
+        procedure: 'Caso 4: INTERNET > Validación de Navegación',
+        objective: 'Asegurar que el flujo de datos sea efectivo en los dispositivos del cliente.',
+        action: 'Pedir al cliente que intente ingresar a un sitio web de prueba o realice una búsqueda.',
+        question: '“¿Puede confirmar si ahora puede navegar correctamente en sus dispositivos?”',
+        leds: { power: 'green', los: 'off', pon: 'green', internet: 'green' },
+        activeLED: 'INTERNET',
+        options: [
+            { label: 'No', nextStep: 'coordinar_visita_internet' },
+            { label: 'Si', nextStep: '5.0' }
+        ]
+    },
+    'coordinar_visita_internet': {
+        id: 'coordinar_visita_internet',
+        title: 'Fallas en el discado',
+        procedure: 'Coordinar visita técnica',
+        objective: 'Cierre por falla en INTERNET',
+        instruction: 'En caso de tener fallas en el discado de internet, estos son los teléfonos de contacto con despacho.',
+        action: 'Preparar y registrar la información relevante de la atención durante la llamada.',
+        question: 'El agente debe marcar el caso como "Falla de Navegación tras ajuste lógico" para informar al técnico domiciliario.',
+        hasDescriptiveImage: true,
+        descriptiveImageStep: 'internet_escalation_images',
+        options: [
+            { label: 'Coordinar visita técnica', nextStep: '0.1' }
+        ]
+    },
+    'internet_escalation_images': {
+        id: 'internet_escalation_images',
+        title: 'Guía Visual: Fallas en el discado',
+        procedure: 'Ayuda Visual',
+        type: 'images_grid',
+        images: ['assets/node_internet_escalation_v2.png']
+    },
+    '5.0': {
+        id: '5.0',
+        title: 'Identificación del tipo de conexión del dispositivo',
+        procedure: 'Selección Case 5 | Case 6',
+        objective: 'determinar si el dispositivo está conectado de forma inalámbrica (WLAN/Wi-Fi) o por cable (LAN).',
+        references: [
+            { label: 'Conexión LAN', text: 'dispositivo conectado directamente al módem con un cable Ethernet.' },
+            { label: 'Conexión WLAN/Wi-Fi', text: 'dispositivo conectado de forma inalámbrica al módem o router.' }
+        ],
+        question: '“¿El dispositivo que desea revisar está conectado por Wi-Fi o por cable de red?”',
+        hasDescriptiveImage: true,
+        descriptiveImageStep: 'connection_type_images',
+        leds: { power: 'green', los: 'off', pon: 'green', internet: 'green', wifi: 'eval', lanx: 'eval' },
+        activeLED: 'WIFI',
+        options: [
+            { label: 'WIFI', nextStep: '5.1' },
+            { label: 'LAN', nextStep: 'finish_call' }
+        ]
+    },
+    'connection_type_images': {
+        id: 'connection_type_images',
+        title: 'Guía Visual: Tipo de Conexión',
+        procedure: 'Ayuda Visual',
+        type: 'images_grid',
+        images: ['assets/node_connection_type.png']
+    },
+    '5.1': {
+        id: '5.1',
+        title: 'Verificación de luz LED Wi-Fi',
+        procedure: 'Diagnóstico de LED Caso 5: WIFI',
+        objective: 'confirmar que la red inalámbrica esté activa en el módem.',
+        references: [
+            { label: 'Luz encendida', text: 'indica que la red Wi-Fi del módem está activa y disponible para los dispositivos.' },
+            { label: 'Luz apagada o parpadeando', text: 'puede haber un problema de configuración o hardware del Wi-Fi.' }
+        ],
+        question: '“¿Se encuentran encendidas las luces que dicen \'2.4G\' o \'5G\' en el frente del equipo?”',
+        hasDescriptiveImage: true,
+        descriptiveImageStep: 'wifi_check_images',
+        leds: { power: 'green', los: 'off', pon: 'green', internet: 'green', wifi: 'eval' },
+        activeLED: 'WIFI',
+        options: [
+            { label: 'No', nextStep: '5.2' },
+            { label: 'Si', nextStep: '5.3' }
+        ]
+    },
+    'wifi_check_images': {
+        id: 'wifi_check_images',
+        title: 'Guía Visual: LED Wi-Fi',
+        procedure: 'Ayuda Visual',
+        type: 'images_grid',
+        images: ['assets/node_5_1_wifi_check.png']
+    },
+    '5.2': {
+        id: '5.2',
+        title: 'Activación del Wi-Fi mediante botón WPS/Wi-Fi',
+        procedure: 'Resolución caso WIFI - Paso 1',
+        objective: 'encender la red Wi-Fi del módem usando el botón WPS/Wi-Fi.',
+        action: '<strong>Indica al cliente:</strong> “Presione el botón blanco WPS/Wi-Fi en el lateral de la terminal por un segundo.”',
+        question: '“¿Luego de presionar el botón, la luz LED Wi-Fi se encendió?”',
+        hasDescriptiveImage: true,
+        descriptiveImageStep: 'wps_button_images',
+        leds: { power: 'green', los: 'off', pon: 'green', internet: 'green', wifi: 'eval' },
+        activeLED: 'WIFI',
+        options: [
+            { label: 'No', nextStep: '5.2_l3_activation' },
+            { label: 'Si', nextStep: '5.3' }
+        ]
+    },
+    'wps_button_images': {
+        id: 'wps_button_images',
+        title: 'Guía Visual: Botón WPS',
+        procedure: 'Ayuda Visual',
+        type: 'images_grid',
+        images: ['assets/node_5_2_wps_button.png']
+    },
+    '5.2_l3_activation': {
+        id: '5.2_l3_activation',
+        title: 'Activación remota L3',
+        procedure: 'Caso 5: Wi-Fi > Gestión remota L3',
+        objective: 'Solicitar la activación remota de la radio Wi-Fi mediante consola de administración.',
+        instruction: 'Solicite a Soporte Nivel 3 el encendido forzado de los módulos inalámbricos.',
+        action: 'Consulte con L3 para la activación vía TR-069 o consola.',
+        question: '¿Se confirmó la activación remota?',
+        leds: { power: 'green', los: 'off', pon: 'green', internet: 'green', wifi: 'eval' },
+        activeLED: 'WIFI',
+        options: [
+            { label: 'Confirmado', nextStep: '5.3' },
+            { label: 'Falla Técnica', nextStep: 'coordinar_visita_wifi' }
+        ]
+    },
+    '5.3': {
+        id: '5.3',
+        title: 'Configuración de Credenciales (SSID/KEY)',
+        procedure: 'Caso 5: Wi-Fi > Gestión remota L3',
+        objective: 'Asegurar que los parámetros de red sean correctos.',
+        instruction: 'Si las luces encienden pero el cliente no puede conectar, solicitar el seteo de credenciales de Wi-Fi.',
+        action: 'Coordinar con L3 el cambio de SSID y Password si es necesario.',
+        question: '“¿Logra detectar la red con el nombre acordado y conectar sus dispositivos?”',
+        leds: { power: 'green', los: 'off', pon: 'green', internet: 'green', wifi: 'green' },
+        activeLED: 'WIFI',
+        options: [
+            { label: 'No', nextStep: 'coordinar_visita_wifi' },
+            { label: 'Si', nextStep: 'finish_call' }
+        ]
+    },
+    'coordinar_visita_wifi': {
+        id: 'coordinar_visita_wifi',
+        title: 'Soporte Técnico a Internet',
+        procedure: 'Escalamiento',
+        objective: 'Cierre por falla de Wi-Fi',
+        instruction: 'En caso de fallas en el servicio de internet, este es el teléfono de Soporte a Internet.',
+        action: 'Preparar y registrar la información relevante de la atención durante la llamada.',
+        question: 'Detallar que se intentó la activación vía L3 sin éxito.',
+        hasDescriptiveImage: true,
+        descriptiveImageStep: 'wifi_escalation_images',
+        options: [
+            { label: 'Escalamiento', nextStep: '0.1' }
+        ]
+    },
+    'wifi_escalation_images': {
+        id: 'wifi_escalation_images',
+        title: 'Guía Visual: Escalamiento Wi-Fi',
+        procedure: 'Ayuda Visual',
+        type: 'images_grid',
+        images: ['assets/node_wifi_escalation.png']
     },
     'bridge_info': {
         id: 'bridge_info',
@@ -255,10 +625,10 @@ const diagnosticTree = {
     },
     'finish_call': {
         id: 'finish_call',
-        title: 'Finalización del Diagnóstico',
+        title: 'Diagnóstico Exitoso - Fin de Llamada',
         procedure: 'Cierre exitoso',
         objective: 'Cierre exitoso.',
-        question: '“¿Puedo ayudarle en algo más?”',
+        question: '“¿Puedo ayudarle en algo más? Muchas gracias por comunicarse con Nuevo Siglo.”',
         options: [{ label: 'Finalizar', nextStep: '0.1' }]
     }
 };
@@ -308,7 +678,7 @@ function render() {
 
     // Body
     elements.mainArea.innerHTML = '';
-    if (step.type === 'welcome') {
+    if (step.id === '0.1') {
         elements.mainArea.innerHTML = `<div class="welcome-screen"><h1 class="welcome-title">${step.title}</h1><button class="btn btn-iniciar" onclick="handleNext('${step.options[0].nextStep}')">Iniciar</button></div>`;
     } else if (step.type === 'images_grid') {
         elements.mainArea.innerHTML = `<h1 class="step-title">${step.title}</h1><div class="desc-images-grid">${step.images.map(img => `<img src="${img}" class="full-mock-img">`).join('')}</div>`;
@@ -366,9 +736,9 @@ function render() {
             step.options.forEach(opt => {
                 const btn = document.createElement('button');
                 let btnClass = 'btn-standard';
-                if (opt.label === 'Si') btnClass = 'btn-yes';
-                if (opt.label === 'No') btnClass = 'btn-no';
-                if (opt.label === 'Coordinar visita técnica') btnClass = 'btn-yes btn-wide';
+                if (opt.label === 'Si' || opt.label === 'Confirmado' || opt.label === 'Fija' || opt.label.includes('Parpadeante') || opt.label.includes('Al día') || opt.label === 'Continuar' || opt.label === 'Escalamiento' || opt.label === 'WIFI' || opt.label === 'LAN') btnClass = 'btn-yes';
+                if (opt.label === 'No' || opt.label === 'Parpadea / Apagada' || opt.label === 'Apagada' || opt.label.includes('Suspendido') || opt.label === 'Falla Técnica') btnClass = 'btn-no';
+                if (opt.label.includes('visita técnica') || opt.label.includes('Registrar Ticket')) btnClass = 'btn-yes btn-wide';
                 btn.className = `btn ${btnClass}`; btn.textContent = opt.label;
                 btn.onclick = () => { if (opt.metadata && opt.metadata.mode) state.mode = opt.metadata.mode; handleNext(opt.nextStep); };
                 intArea.appendChild(btn);
@@ -378,16 +748,19 @@ function render() {
     }
 
     // Footer
-    if (step.id === '0.1' || step.id === '0.2' || step.id === '0.3' || step.id === 'coordinar_visita') {
+    if (step.id === '0.1' || step.id === '0.2' || step.id === '0.3' || step.id.includes('coordinar_visita') || (step.id.includes('error') && !step.id.includes('commercial')) || step.id === 'finish_call' || step.id === 'coordinar_visita_wifi') {
         elements.ledArea.style.display = 'none';
     } else {
         elements.ledArea.style.display = 'flex'; elements.ledArea.innerHTML = '<div class="led-group"></div>';
         const group = elements.ledArea.querySelector('.led-group');
-        ['POWER', 'LOS', 'PON', 'INTERNET'].forEach(ledName => {
+        const ledsToShow = ['POWER', 'LOS', 'PON', 'INTERNET', 'WIFI', 'LANx'];
+        ledsToShow.forEach(ledName => {
             const ledKey = ledName.toLowerCase(); const ledStatus = step.leds ? step.leds[ledKey] : 'off';
             const isActive = step.activeLED === ledName;
             const box = document.createElement('div'); box.className = `led-box ${isActive ? 'active' : ''}`;
-            let dotClass = ''; if (ledStatus === 'green' || (isActive && ledStatus === 'eval' && ledName !== 'LOS')) dotClass = 'green'; else if (ledStatus === 'red' || (isActive && ledName === 'LOS')) dotClass = 'red';
+            let dotClass = '';
+            if (ledStatus === 'green' || (isActive && ledStatus === 'eval' && ledName !== 'LOS')) dotClass = 'green';
+            else if (ledStatus === 'red' || (isActive && ledName === 'LOS')) dotClass = 'red';
             box.innerHTML = `<span class="led-name">${ledName}</span><div class="led-dot ${dotClass}"></div>`;
             group.appendChild(box);
         });
