@@ -1,30 +1,30 @@
 /**
- * NS-STI v5.6.0 - PROFESSIONAL MASTER
- * Enterprise UI without emojis. Optimized CRM reporting with one-click copy.
+ * NS-STI v5.7.0 - ULTIMATE ENTERPRISE
+ * Professional UI with Subscriber ID, dynamic summary, and sanitized triage labels.
  */
 
 const CONFIG = {
-    VERSION: '5.6.0 (Professional)',
+    VERSION: '5.7.0 (Enterprise)',
     BRAND: 'Nuevo Siglo',
     MODELS: {
-        F6600: { id: 'F6600', name: 'ZTE F6600', icon: 'M', desc: '4 Antenas' },
-        F1611A: { id: 'F1611A', name: 'ZTE F1611A', icon: 'M', desc: '2 Antenas' }
+        F6600: { id: 'F6600', name: 'F6600', desc: '4 Antenas' },
+        F1611A: { id: 'F1611A', name: 'F1611A', desc: '2 Antenas' }
     }
 };
 
 const TREE = {
     '0.1': {
         id: '0.1',
-        case: 'CASO 0: ATENCIÓN DE LLAMADA',
-        title: 'Inicio de Gestión',
-        desc: 'Soporte Técnico FTTH - Panel de Control.',
+        case: 'ATENCIÓN DE LLAMADA',
+        title: 'Gestión FTTH',
+        desc: 'Inicie el protocolo de soporte interactivo para asistencia técnica.',
         next: '0.2'
     },
     '0.2': {
         id: '0.2',
-        case: 'CASO 0: TRIAJE PRIMARIO',
-        title: 'Selección de Entorno',
-        desc: 'Identifique el equipo y modo de operación.',
+        case: 'TRIAJE PRIMARIO',
+        title: 'Configuración del Servicio',
+        desc: 'Seleccione el modelo del equipo y el modo de operación.',
         next: '1.0'
     },
 
@@ -120,11 +120,37 @@ const TREE = {
     },
     '2.2': {
         id: '2.2',
+        title: 'Reconexión en Módem',
+        objective: 'Verificar que el patchcord esté correctamente conectado al módem.',
+        action: 'Indique al cliente: “Desconecte y vuelva a conectar el patchcord de fibra (punta verde) en la parte inferior del módem”. Explique que debe tirar con cuidado e insertar hasta sentir un click.',
+        question: '¿Se apagó la luz LED LOS tras reconectar en el módem?',
+        leds: { power: 'on-green', los: 'on-red' },
+        activeLed: 'LOS',
+        options: [
+            { label: 'Sí, se apagó', next: '3.0', type: 'success' },
+            { label: 'Sigue encendida', next: '2.3', type: 'danger' }
+        ]
+    },
+    '2.3': {
+        id: '2.3',
+        title: 'Reconexión en Roseta NS',
+        objective: 'Confirmar conexión del patchcord a la roseta de pared de Nuevo Siglo.',
+        action: 'Indique al cliente: “Desconecte y vuelva a conectar el cable en la roseta de la pared. Use la roseta que tiene el sticker de NS”.',
+        question: '¿Se apagó la luz LED LOS tras reconectar en la roseta?',
+        leds: { power: 'on-green', los: 'on-red' },
+        activeLed: 'LOS',
+        options: [
+            { label: 'Sí, se apagó', next: '3.0', type: 'success' },
+            { label: 'Sigue encendida', next: '2.4', type: 'danger' }
+        ]
+    },
+    '2.4': {
+        id: '2.4',
         case: 'CASO 2: ESCALAMIENTO N2',
         title: 'Derivación por Falla Acometida',
-        objective: 'Falla física de señal sin resolución por usuario.',
-        action: 'Derive a Soporte de Segundo Nivel por posible rotura de fibra externa.',
-        question: '¿Confirma derivación a N2 por señal LOS?',
+        objective: 'Falla física de señal sin resolución por manipulación.',
+        action: 'Prepare la información y derive el caso a Segundo Nivel / Despacho por rotura externa.',
+        question: '¿Confirma derivación a N2?',
         leds: { power: 'on-green', los: 'on-red' },
         options: [
             { label: 'Confirmar Derivación', next: '6.3_SUMMARY', type: 'success' },
@@ -309,11 +335,11 @@ class App {
         this.state = {
             node: '0.1',
             history: [],
+            subscriberId: '',
             model: null,
             mode: null,
             logs: [],
-            startTime: new Date(),
-            prevLeds: {}
+            startTime: new Date()
         };
         this.mount = document.getElementById('app');
         this.init();
@@ -347,9 +373,6 @@ class App {
                 return;
             }
 
-            const currentStep = TREE[this.state.node];
-            if (currentStep.leds) this.state.prevLeds = { ...this.state.prevLeds, ...currentStep.leds };
-
             this.state.history.push(this.state.node);
             this.state.node = nextNodeId;
             if (target.case || target.title) {
@@ -357,12 +380,46 @@ class App {
             }
         }
 
-        if (action === 'SET_TRIAGE') this.state = { ...this.state, ...data };
+        if (action === 'SET_SUBSCRIBER') {
+            this.state.subscriberId = data;
+            const btn = document.getElementById('triage-start-btn');
+            const msg = document.getElementById('validation-msg');
+            const input = document.getElementById('sub-id');
+
+            const isReady = this.state.subscriberId && this.state.model && this.state.mode;
+            if (btn) btn.disabled = !isReady;
+
+            if (msg) {
+                if (!isReady) {
+                    let missing = [];
+                    if (!this.state.subscriberId) missing.push('Nro. Abonado');
+                    if (!this.state.model) missing.push('Modelo ONT');
+                    if (!this.state.mode) missing.push('Modo Servicio');
+                    msg.innerHTML = `Falta cargar: ${missing.join(', ')}`;
+                } else {
+                    msg.innerHTML = '';
+                }
+            }
+
+            if (input) {
+                if (!this.state.subscriberId) input.classList.add('required-hint');
+                else input.classList.remove('required-hint');
+            }
+
+            return;
+        }
+
+        if (action === 'SET_TRIAGE') {
+            this.state = { ...this.state, ...data };
+            this.render(); // Re-render for buttons/cards selection
+            return;
+        }
+
         if (action === 'BACK') {
             if (this.state.history.length > 0) this.state.node = this.state.history.pop();
         }
         if (action === 'RESET') {
-            this.state = { node: '0.1', history: [], model: null, mode: null, logs: [], startTime: new Date(), prevLeds: {} };
+            this.state = { node: '0.1', history: [], subscriberId: '', model: null, mode: null, logs: [], startTime: new Date() };
         }
         this.render();
     }
@@ -384,11 +441,12 @@ class App {
             <div class="header-status">
                 ${this.state.node !== '0.1' ? `
                     <div class="header-badges">
+                        <span class="badge">ID: ${this.state.subscriberId || 'N/A'}</span>
                         <span class="badge">${this.state.model || '?'}</span>
                         <span class="badge">${this.state.mode || '?'}</span>
                     </div>
                     <div class="node-id"># ${step.id}</div>
-                ` : '<span class="badge">LISTO</span>'}
+                ` : '<span class="badge">SISTEMA LISTO</span>'}
             </div>
         `;
         this.mount.appendChild(header);
@@ -407,44 +465,63 @@ class App {
     renderStart(container, step) {
         container.innerHTML = `
             <div class="view" style="text-align:center;">
-                <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">${step.title}</h1>
+                <h1 style="font-size: 2.2rem; margin-bottom: 1rem;">${step.title}</h1>
                 <p style="color: var(--text-muted); margin-bottom: 3rem;">${step.desc}</p>
-                <button class="btn btn-yes" style="margin: 0 auto;" onclick="app.dispatch('NAVIGATE', '${step.next}')">
-                    Iniciar Atención
+                <button class="btn btn-yes" style="margin: 0 auto;" 
+                        onclick="app.dispatch('NAVIGATE', '${step.next}')">
+                    Acceder al Panel
                 </button>
             </div>
         `;
     }
 
     renderTriage(container, step) {
+        let missing = [];
+        if (!this.state.subscriberId) missing.push('Nro. Abonado');
+        if (!this.state.model) missing.push('Modelo ONT');
+        if (!this.state.mode) missing.push('Modo Servicio');
+        const isReady = missing.length === 0;
+
         container.innerHTML = `
             <div class="view">
                 <div class="title-section">
                     <h2>${step.title}</h2>
                     <p>${step.desc}</p>
                 </div>
+
+                <div class="input-group">
+                    <label class="input-label">Identificador del Abonado</label>
+                    <input type="text" id="sub-id" class="subscriber-input ${!this.state.subscriberId ? 'required-hint' : ''}" 
+                           placeholder="Número de Contrato" 
+                           value="${this.state.subscriberId || ''}"
+                           oninput="app.dispatch('SET_SUBSCRIBER', this.value)">
+                </div>
+
                 <div class="card-grid">
                     ${Object.values(CONFIG.MODELS).map(hw => `
-                        <div class="selection-card ${this.state.model === hw.id ? 'active' : ''}" 
+                        <div class="selection-card ${this.state.model === hw.id ? 'active' : ''} ${!this.state.model ? 'required-hint' : ''}" 
                              onclick="app.dispatch('SET_TRIAGE', {model: '${hw.id}'})">
-                            <div class="icon-box">MODEM</div>
-                            <strong>${hw.name}</strong>
+                            <strong style="font-size: 1.2rem;">${hw.name}</strong>
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">${hw.desc}</p>
                         </div>
                     `).join('')}
                 </div>
+
                 <div class="card-grid" style="grid-template-columns: 1fr 1fr; margin-top: 1rem;">
-                    <div class="selection-card ${this.state.mode === 'Standard' ? 'active' : ''}" 
+                    <div class="selection-card ${this.state.mode === 'Standard' ? 'active' : ''} ${!this.state.mode ? 'required-hint' : ''}" 
                          onclick="app.dispatch('SET_TRIAGE', {mode: 'Standard'})">
-                         <strong>MODO STANDARD</strong>
+                         <strong>STANDARD</strong>
                     </div>
-                    <div class="selection-card ${this.state.mode === 'Bridge' ? 'active' : ''}" 
+                    <div class="selection-card ${this.state.mode === 'Bridge' ? 'active' : ''} ${!this.state.mode ? 'required-hint' : ''}" 
                          onclick="app.dispatch('SET_TRIAGE', {mode: 'Bridge'})">
-                         <strong>MODO BRIDGE</strong>
+                         <strong>BRIDGE</strong>
                     </div>
                 </div>
-                <div style="margin-top: 2rem; text-align:center;">
-                    <button class="btn btn-yes" style="margin: 0 auto;"
-                            ${!this.state.model || !this.state.mode ? 'disabled' : ''}
+
+                <div style="margin-top: 1rem; text-align:center;">
+                    <div id="validation-msg" class="validation-msg">${!isReady ? `Falta cargar: ${missing.join(', ')}` : ''}</div>
+                    <button id="triage-start-btn" class="btn btn-yes" style="margin: 0.5rem auto 0;"
+                            ${!isReady ? 'disabled' : ''}
                             onclick="app.dispatch('NAVIGATE', '${step.next}')">
                         Comenzar Diagnóstico
                     </button>
@@ -471,7 +548,7 @@ class App {
                         </button>
                     `).join('')}
                 </div>
-                <button class="btn btn-back" style="margin: 1rem auto 0;" onclick="app.dispatch('BACK')">Volver</button>
+                <button class="btn btn-back" style="margin: 0.5rem auto 0;" onclick="app.dispatch('BACK')">Volver</button>
             </div>
         `;
         container.appendChild(div);
@@ -479,21 +556,24 @@ class App {
 
     renderSummary(container, step) {
         container.innerHTML = `
-            <div class="view" style="display: flex; flex-direction: column; height: 100%;">
-                <div class="title-section" style="margin-bottom: 1rem;">
+            <div class="view" style="height: 100%; justify-content: space-between;">
+                <div class="title-section" style="margin-bottom: 0.5rem;">
                     <h2>${step.title}</h2>
-                    <p>Reporte optimizado para gestión interna.</p>
+                    <p>Reporte optimizado para CRM.</p>
                 </div>
                 
                 <textarea id="crm-area" class="summary-area" readonly>--- REPORTE STI ---
+ID ABONADO: ${this.state.subscriberId}
 ID CIERRE: ${this.state.node}
 EQUIPO: ${this.state.model} | MODO: ${this.state.mode}
+INICIO: ${this.state.startTime.toLocaleString()}
+FINAL: ${new Date().toLocaleString()}
 ---------------------------
 PASOS EJECUTADOS:
 ${this.state.logs.join('\n')}
 ---------------------------</textarea>
 
-                <div class="actions" style="margin-top: 0.5rem;">
+                <div class="actions" style="margin-top: 1rem;">
                     <button id="copy-btn" class="btn btn-yes" onclick="app.copyToClipboard()">
                         Copiar Reporte
                     </button>
@@ -510,13 +590,21 @@ ${this.state.logs.join('\n')}
         const f = document.createElement('footer');
         f.className = 'app-footer';
         const leds = ['POWER', 'LOS', 'PON', 'INTERNET', 'WIFI', 'LAN'];
-        const currentLeds = { ...this.state.prevLeds, ...(step.leds || {}) };
+
+        // RECALCULATE KNOWN LEDS DYNAMICALLY FROM CURRENT PATH
+        let knownLeds = {};
+        [...this.state.history, this.state.node].forEach(nodeId => {
+            const s = TREE[nodeId];
+            if (s && s.leds) {
+                knownLeds = { ...knownLeds, ...s.leds };
+            }
+        });
 
         f.innerHTML = `
             <div class="led-monitor">
-                ${leds.filter(l => currentLeds.hasOwnProperty(l.toLowerCase())).map(l => {
+                ${leds.filter(l => knownLeds.hasOwnProperty(l.toLowerCase())).map(l => {
             const key = l.toLowerCase();
-            let status = currentLeds[key] || 'off';
+            let status = knownLeds[key] || 'off';
             if (this.state.mode === 'Bridge' && (l === 'INTERNET' || l === 'WIFI')) status = 'disabled';
             const isEvaluating = step.activeLed === l;
             return `
