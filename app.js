@@ -4,12 +4,8 @@
  */
 
 const CONFIG = {
-    VERSION: '5.7.40 (Enterprise)',
+    VERSION: '5.8.0 (Enterprise)',
     BRAND: 'Nuevo Siglo',
-    // Dynamic Workstation Info
-    OPERATOR: window.NS_METADATA?.user || 'Acceso Directo',
-    WORKSTATION: window.NS_METADATA?.hostname || 'Terminal-Local',
-    WS_STATUS: window.NS_METADATA?.status || 'No detectado',
     MODELS: {
         F6600: { id: 'F6600', name: 'F6600', desc: '4 Antenas' },
         F1611A: { id: 'F1611A', name: 'F1611A', desc: '2 Antenas' }
@@ -471,6 +467,7 @@ class App {
                 node: '0.1',
                 history: [],
                 subscriberId: '',
+                operatorEmail: '',
                 model: null,
                 mode: null,
                 logs: [],
@@ -525,6 +522,14 @@ class App {
 
             this.state.history.push(this.state.node);
             this.state.node = nextNodeId;
+        }
+
+        if (action === 'SET_OPERATOR') {
+            this.state.operatorEmail = data.toLowerCase();
+            const btn = document.getElementById('access-btn');
+            const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.state.operatorEmail);
+            if (btn) btn.disabled = !isEmailValid;
+            return;
         }
 
         if (action === 'SET_SUBSCRIBER') {
@@ -583,7 +588,7 @@ class App {
         }
         if (action === 'RESET') {
             localStorage.removeItem('ns_sti_state');
-            this.state = { node: '0.1', history: [], subscriberId: '', model: null, mode: null, logs: [], startTime: new Date() };
+            this.state = { ...this.state, node: '0.1', history: [], subscriberId: '', model: null, mode: null, logs: [], startTime: new Date() };
         }
         this.saveState();
         this.render();
@@ -637,26 +642,24 @@ class App {
     }
 
     renderStart(container, step) {
+        const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.state.operatorEmail || '');
         container.innerHTML = `
             <div class="view" style="text-align:center;">
                 <h1 style="font-size: 2.2rem; margin-bottom: 0.5rem;">${step.title}</h1>
                 <p style="color: var(--text-muted); margin-bottom: 2rem;">${step.desc}</p>
                 
-                <div class="instruction-card" style="display: inline-block; margin-bottom: 2.5rem; border-style: solid; text-align: left;">
-                    <div style="font-size: 0.75rem; color: var(--secondary); margin-bottom: 0.5rem; font-weight: 800;">AUDITORÍA DE ESTACIÓN:</div>
-                    <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.5rem 1.5rem; font-size: 0.9rem;">
-                        <span style="color: var(--text-muted);">Usuario:</span>
-                        <strong style="color: var(--primary);">${CONFIG.OPERATOR}</strong>
-                        <span style="color: var(--text-muted);">Hostname:</span>
-                        <strong style="color: var(--primary);">${CONFIG.WORKSTATION}</strong>
-                        <span style="color: var(--text-muted);">Estado:</span>
-                        <span class="badge" style="display: inline-block; padding: 0 5px; font-size: 0.6rem; vertical-align: middle;">${CONFIG.WS_STATUS}</span>
-                    </div>
+                <div class="input-group" style="margin-bottom: 2rem;">
+                    <label class="input-label">Correo Corporativo</label>
+                    <input type="email" id="op-email" class="subscriber-input" 
+                           placeholder="ejemplo@nuevosiglo.com.uy" 
+                           value="${this.state.operatorEmail || ''}"
+                           oninput="app.dispatch('SET_OPERATOR', this.value)">
                 </div>
 
                 <div style="display: block;">
-                    <button class="btn btn-yes" style="margin: 0 auto;" 
-                            onclick="app.dispatch('NAVIGATE', {id: '${step.next}', label: 'Acceder'})">
+                    <button id="access-btn" class="btn btn-yes" style="margin: 0 auto;" 
+                            ${!isEmailValid ? 'disabled' : ''}
+                            onclick="app.dispatch('NAVIGATE', {id: '${step.next}', label: 'Iniciar Triage'})">
                         Acceder al Panel
                     </button>
                  </div>
@@ -797,7 +800,7 @@ class App {
                 
                 <textarea id="crm-area" class="summary-area" readonly>--- REPORTE STI ---
 ID ABONADO: ${this.state.subscriberId}
-OPERADOR: ${CONFIG.OPERATOR} | TERMINAL: ${CONFIG.WORKSTATION}
+OPERADOR: ${this.state.operatorEmail}
 ID CIERRE: ${this.state.node}
 EQUIPO: ${this.state.model} | MODO: ${this.state.mode}
 INICIO: ${this.state.startTime.toLocaleString()}
