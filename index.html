@@ -4,63 +4,50 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NS-STI | Soporte Técnico de Nuevo Siglo</title>
+  <title>NS-STI | Motor de Diagnóstico FTTH</title>
   <link rel="stylesheet" href="styles.css">
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📡</text></svg>">
 </head>
 
 <body>
   <header class="app-header">
-    <div class="header-left" id="header-left-area">
-      <div class="header-info">
-        <p id="procedure-path">Operador: Soporte Nivel 1</p>
-        <div class="breadcrumb-info">
-          <span id="header-procedimiento">PROCEDIMIENTO</span> |
-          <span id="header-modelo">MODELO</span> |
-          <span id="header-modo">MODO</span>
-        </div>
-        <h1 id="step-title">Bienvenido</h1>
-      </div>
-    </div>
-    <div class="process-status" id="process-status">Inicio</div>
+    <!-- Renderizado dinámico desde app.js (Breadcrumbs y Ayudas Visuales) -->
+    <div class="header-main-text" style="width: 100%; border: none;">Cargando interfaz de soporte...</div>
   </header>
 
   <main class="main-content">
-    <div id="objective-container"></div>
-
-    <div class="action-card">
-      <p class="instruction-text" id="instruction-text">Cargando asistente...</p>
-
-      <div id="interaction-area"></div>
-
-      <div id="dialog-container"></div>
+    <!-- Contenido principal del paso de diagnóstico -->
+    <div class="welcome-screen">
+      <h1 class="welcome-title">Cargando asistente...</h1>
     </div>
   </main>
 
-  <footer class="app-footer">
-    <div class="led-monitor">
-      <div class="led-item" id="led-power">
-        <div class="led-bulb"></div>
-        <span class="led-label">POWER</span>
+  <footer class="app-footer" style="display: none;">
+    <!-- Monitoreo dinámico de LEDs -->
+    <div class="led-group">
+      <div class="led-box"><span class="led-name">POWER</span>
+        <div class="led-dot"></div>
       </div>
-      <div class="led-item" id="led-los">
-        <div class="led-bulb"></div>
-        <span class="led-label">LOS</span>
+      <div class="led-box"><span class="led-name">LOS</span>
+        <div class="led-dot"></div>
       </div>
-      <div class="led-item" id="led-pon">
-        <div class="led-bulb"></div>
-        <span class="led-label">PON</span>
+      <div class="led-box"><span class="led-name">PON</span>
+        <div class="led-dot"></div>
       </div>
-      <div class="led-item" id="led-internet">
-        <div class="led-bulb"></div>
-        <span class="led-label">INTERNET</span>
+      <div class="led-box"><span class="led-name">INTERNET</span>
+        <div class="led-dot"></div>
       </div>
-    </div>
-    <div class="footer-info">
-      <div>Nuevo Siglo NT | STI v1.2.5</div>
-      <div id="footer-status">Estado: Listo</div>
+      <div class="led-box"><span class="led-name">WIFI</span>
+        <div class="led-dot"></div>
+      </div>
+      <div class="led-box"><span class="led-name">LANx</span>
+        <div class="led-dot"></div>
+      </div>
     </div>
   </footer>
 
+  <!-- Script de lógica único -->
   <script src="app.js"></script>
 </body>
 
