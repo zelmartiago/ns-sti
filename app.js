@@ -248,12 +248,11 @@ const TREE = {
         case: 'CASO 4: LUZ INTERNET',
         title: 'Verificación de luz LED INTERNET',
         objective: 'Confirmar que el servicio de internet esté activo en el módem.',
-        action: 'Interpretación de estados:<br>• Encendida/Parpadeando: Conexión activa.<br>• Apagada: Problema de aprovisionamiento, sincronización o red.',
         question: '¿La luz LED INTERNET está encendida o parpadeando?',
         leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'off' },
         activeLed: 'INTERNET',
         options: [
-            { label: 'Sí, encendida', next: '4.5', type: 'success' },
+            { label: 'Sí, encendida', next: 'NAV_CONNECTIVITY', type: 'success' },
             { label: 'No, está apagada', next: '4.1', type: 'danger' }
         ]
     },
@@ -266,7 +265,7 @@ const TREE = {
         leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'off' },
         activeLed: 'INTERNET',
         options: [
-            { label: 'Sí, encendió', next: '4.5', type: 'success' },
+            { label: 'Sí, encendió', next: 'NAV_CONNECTIVITY', type: 'success' },
             { label: 'No, sigue apagada', next: '4.2', type: 'danger' }
         ]
     },
@@ -279,8 +278,8 @@ const TREE = {
         leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'off' },
         activeLed: 'INTERNET',
         options: [
-            { label: 'SÍ (Al día / Sigue Off)', next: '4.3', type: 'success' },
-            { label: 'NO (Deuda / Suspendido)', next: 'CASE_COMMERCIAL_DEBT', type: 'danger' }
+            { label: 'Al día', next: '4.3', type: 'success' },
+            { label: 'Con deuda', next: 'CASE_COMMERCIAL_DEBT', type: 'danger' }
         ]
     },
     '4.3': {
@@ -304,21 +303,20 @@ const TREE = {
         leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'off' },
         activeLed: 'INTERNET',
         options: [
-            { label: 'Sí, sincronizó', next: '4.5', type: 'success' },
+            { label: 'Sí, sincronizó', next: 'NAV_CONNECTIVITY', type: 'success' },
             { label: 'No, coordinar visita', next: 'ESCALATE_VISIT', type: 'danger' }
         ]
     },
-    '4.5': {
-        id: '4.5',
+    'NAV_CONNECTIVITY': {
+        id: 'METODO-CONEXION',
         case: 'CONECTIVIDAD DEL CLIENTE',
-        title: 'Identificación del Tipo de Conexión',
-        objective: 'Determinar si el dispositivo usa red inalámbrica (Wi-Fi) o cableada (LAN).',
-        action: 'Referencias:<br>• LAN: Conectado con cable Ethernet.<br>• Wi-Fi: Conexión inalámbrica (WLAN).',
-        question: '¿El dispositivo que desea revisar está conectado por Wi-Fi o por cable de red?',
+        title: 'Tipo de Conexión',
+        objective: 'Definir el método de acceso para continuar el diagnóstico final.',
+        question: 'Elija el medio de conexión del dispositivo a revisar:',
         leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-green' },
         options: [
-            { label: 'Por Wi-Fi', next: '5.0', type: 'success' },
-            { label: 'Por Cable (LAN)', next: '6.0', type: 'no' }
+            { label: 'Diagnosticar Wi-Fi', next: '5.0', type: 'neutral' },
+            { label: 'Diagnosticar Cable (LAN)', next: '6.0', type: 'neutral' }
         ]
     },
 
@@ -381,7 +379,7 @@ const TREE = {
         objective: 'Asegurar la conectividad total en el domicilio.',
         question: '¿Hay algún otro dispositivo que el cliente quiera revisar?',
         options: [
-            { label: 'Sí, revisar otro', next: '4.5', type: 'success' },
+            { label: 'Sí, revisar otro', next: 'NAV_CONNECTIVITY', type: 'success' },
             { label: 'No, gestión completa', next: '6.1', type: 'no' }
         ]
     },
@@ -404,8 +402,8 @@ const TREE = {
         id: '6.1',
         title: 'Cierre con Satisfacción',
         objective: 'Auditoría final de servicio.',
-        action: 'Realice un Speedtest y confirme que sea acorde al plan contratado.',
-        question: '¿Finalizamos la atención por éxito técnico?',
+        action: 'Indique al cliente que navegue a <a href="https://www.nuevosiglo.com.uy/" target="_blank">www.nuevosiglo.com.uy</a> para validar carga. Luego realice un Speedtest en <a href="https://www.speedtest.net/" target="_blank">www.speedtest.net</a>.',
+        question: '¿Los resultados son conformes y acordes al plan?',
         options: [{ label: 'Finalizar Gestión', next: '6.3_SUMMARY', type: 'success' }]
     },
 
