@@ -380,7 +380,7 @@ const TREE = {
         question: '¿Hay algún otro dispositivo que el cliente quiera revisar?',
         options: [
             { label: 'Sí, revisar otro', next: 'NAV_CONNECTIVITY', type: 'success' },
-            { label: 'No, gestión completa', next: '6.1', type: 'no' }
+            { label: 'No, gestión completa', next: '6.3_SUMMARY', type: 'no' }
         ]
     },
 
@@ -801,7 +801,7 @@ class App {
 
     renderSummary(container, step) {
         container.innerHTML = `
-            <div class="view" style="height: 100%; justify-content: space-between;">
+            <div class="view" style="justify-content: center;">
                 <div class="title-section" style="margin-bottom: 0.5rem;">
                     <h2>${step.title}</h2>
                     <p>Reporte optimizado para CRM.</p>
