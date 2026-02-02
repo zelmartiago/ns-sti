@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>NS-STI | Soporte Técnico de Nuevo Siglo</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+  <header class="app-header">
+    <div class="header-left" id="header-left-area">
+      <div class="header-info">
+        <p id="procedure-path">Operador: Soporte Nivel 1</p>
+        <div class="breadcrumb-info">
+          <span id="header-procedimiento">PROCEDIMIENTO</span> |
+          <span id="header-modelo">MODELO</span> |
+          <span id="header-modo">MODO</span>
+        </div>
+        <h1 id="step-title">Bienvenido</h1>
+      </div>
+    </div>
+    <div class="process-status" id="process-status">Inicio</div>
+  </header>
+
+  <main class="main-content">
+    <div id="objective-container"></div>
+
+    <div class="action-card">
+      <p class="instruction-text" id="instruction-text">Cargando asistente...</p>
+
+      <div id="interaction-area"></div>
+
+      <div id="dialog-container"></div>
+    </div>
+  </main>
+
+  <footer class="app-footer">
+    <div class="led-monitor">
+      <div class="led-item" id="led-power">
+        <div class="led-bulb"></div>
+        <span class="led-label">POWER</span>
+      </div>
+      <div class="led-item" id="led-los">
+        <div class="led-bulb"></div>
+        <span class="led-label">LOS</span>
+      </div>
+      <div class="led-item" id="led-pon">
+        <div class="led-bulb"></div>
+        <span class="led-label">PON</span>
+      </div>
+      <div class="led-item" id="led-internet">
+        <div class="led-bulb"></div>
+        <span class="led-label">INTERNET</span>
+      </div>
+    </div>
+    <div class="footer-info">
+      <div>Nuevo Siglo NT | STI v1.2.5</div>
+      <div id="footer-status">Estado: Listo</div>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+
+</html>
