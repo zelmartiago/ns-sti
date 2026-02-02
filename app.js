@@ -445,6 +445,14 @@ const TREE = {
         action: 'Indique al cliente: “Para normalizar su servicio de Nuevo Siglo, es imperativo que restaure primero la energía eléctrica. Puede contactar a Telegestiones UTE al 0800 1930 o consultar con un profesional certificado que asista su instalación interna”.',
         question: '¿Comprendió que debe acudir a UTE o a un técnico calificado para resolver el inconveniente eléctrico antes de que podamos operar sobre su módem?',
         options: [{ label: 'Sí, Finalizar gestión', next: '6.3_SUMMARY', type: 'success' }]
+    },
+    '6.4_ABORTED': {
+        id: 'CIERRE-ABRUPTO',
+        title: 'Gestión Interrumpida',
+        objective: 'Finalizar gestión por caída de llamada o desconexión.',
+        action: 'Se ha solicitado el cierre abrupto de la sesión. Se procederá a generar el reporte con los pasos alcanzados hasta el momento.',
+        question: '¿Confirma el cierre de la gestión actual?',
+        options: [{ label: 'Confirmar Cierre', next: '6.3_SUMMARY', type: 'danger' }]
     }
 };
 
@@ -553,6 +561,22 @@ class App {
         if (action === 'BACK') {
             if (this.state.history.length > 0) this.state.node = this.state.history.pop();
         }
+        if (action === 'RESET_CONFIRM') {
+            if (this.state.node === '0.1' || this.state.node === '0.2') {
+                this.dispatch('RESET');
+                return;
+            }
+            if (confirm('¿Realmente desea volver al inicio? Se perderá el progreso del diagnóstico actual.')) {
+                this.dispatch('RESET');
+            }
+            return;
+        }
+        if (action === 'ABORT_SESSION') {
+            if (confirm('Se registrará el cierre abrupto de la sesión (llamada caída/desconexión). ¿Continuar?')) {
+                this.dispatch('NAVIGATE', '6.4_ABORTED');
+            }
+            return;
+        }
         if (action === 'RESET') {
             localStorage.removeItem('ns_sti_state');
             this.state = { node: '0.1', history: [], subscriberId: '', model: null, mode: null, logs: [], startTime: new Date() };
@@ -568,8 +592,8 @@ class App {
         const header = document.createElement('header');
         header.className = 'app-header';
         header.innerHTML = `
-            <div class="brand">
-                <div class="brand-logo">NS</div>
+            <div class="brand" style="cursor: pointer;" onclick="app.dispatch('RESET_CONFIRM')">
+                <div class="brand-logo" title="Volver al inicio">NS</div>
                 <div class="brand-text">
                     <h1>${CONFIG.BRAND}</h1>
                     <p>SOPORTE TÉCNICO INTERACTIVO</p>
@@ -577,12 +601,20 @@ class App {
             </div>
             <div class="header-status">
                 ${this.state.node !== '0.1' ? `
-                    <div class="header-badges">
-                        <span class="badge">ID: ${this.state.subscriberId || 'N/A'}</span>
-                        <span class="badge">${this.state.model || '?'}</span>
-                        <span class="badge">${this.state.mode || '?'}</span>
+                    <div style="display: flex; align-items: center; gap: 1rem; justify-content: flex-end;">
+                        ${this.state.node !== '0.2' && step.type !== 'final' ? `
+                            <button class="btn btn-no" style="min-width: unset; padding: 4px 10px; font-size: 0.65rem; box-shadow: 0 2px 0 #c53030;" 
+                                    onclick="app.dispatch('ABORT_SESSION')">ABORTAR LLAMADA</button>
+                        ` : ''}
+                        <div>
+                            <div class="header-badges">
+                                <span class="badge">ID: ${this.state.subscriberId || 'N/A'}</span>
+                                <span class="badge">${this.state.model || '?'}</span>
+                                <span class="badge">${this.state.mode || '?'}</span>
+                            </div>
+                            <div class="node-id"># ${step.id}</div>
+                        </div>
                     </div>
-                    <div class="node-id"># ${step.id}</div>
                 ` : '<span class="badge">SISTEMA LISTO</span>'}
             </div>
         `;
