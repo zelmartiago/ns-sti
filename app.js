@@ -86,7 +86,7 @@ const TREE = {
         question: '¿Confirma la apertura del ticket por falla de Energía?',
         leds: { power: 'off' },
         options: [
-            { label: 'Confirmar Derivación', next: '6.3_SUMMARY', type: 'success' },
+            { label: 'Confirmar Visita Técnica', next: '6.3_SUMMARY', type: 'success' },
             { label: 'Volver a intentar', next: '1.0', type: 'danger' }
         ]
     },
@@ -153,7 +153,7 @@ const TREE = {
         question: '¿Confirma derivación a N2?',
         leds: { power: 'on-green', los: 'on-red' },
         options: [
-            { label: 'Confirmar Derivación', next: '6.3_SUMMARY', type: 'success' },
+            { label: 'Confirmar Visita Técnica', next: '6.3_SUMMARY', type: 'success' },
             { label: 'Volver al inicio', next: '0.1', type: 'danger' }
         ]
     },
@@ -174,27 +174,55 @@ const TREE = {
     },
     '3.1': {
         id: '3.1',
-        title: 'Reinicio de Sincronismo',
-        objective: 'Forzar nueva sesión lógica.',
-        action: 'Reinicie el módem desenchufándolo 10 segundos.',
-        question: '¿La luz PON quedó fija tras el reinicio?',
+        title: 'Reinicio de Energía',
+        objective: 'Forzar nueva sesión de sincronismo mediante reinicio eléctrico.',
+        action: 'Indique al cliente: “Presione el botón rojo ON/OFF en la parte trasera para apagar y volver a encender el equipo”. Alternativa: desenchufar fuente 10s. Espere 30 segundos tras el reinicio.',
+        question: '¿La luz LED PON está encendida y fija?',
         leds: { power: 'on-green', los: 'off', pon: 'off' },
+        activeLed: 'PON',
         options: [
-            { label: 'Sí, sincronizó', next: 'MODE_BIFURCATION', type: 'success' },
+            { label: 'Sí, quedó fija', next: 'MODE_BIFURCATION', type: 'success' },
             { label: 'Sigue parpadeando', next: '3.2', type: 'danger' }
         ]
     },
     '3.2': {
         id: '3.2',
-        case: 'CASO 3: ESCALAMIENTO L3',
-        title: 'Derivación por Falla de Autenticación',
-        objective: 'El equipo sincroniza señal pero no vincula ID.',
-        action: 'Contacte a Ledefyl (L3) para reaprovisionar la ONT.',
-        question: '¿Se solicitó el reaprovisionamiento?',
-        leds: { power: 'on-green', los: 'off', pon: 'on-green' },
+        title: 'Reconexión en Módem',
+        objective: 'Asegurar que el patchcord de fibra esté correctamente conectado al módem.',
+        action: 'Indique al cliente: “Desconecte y vuelva a conectar el patchcord de fibra (punta verde) en la parte inferior del módem”. Tire con cuidado de la punta verde e inserte hasta sentir un click.',
+        question: '¿La luz LED PON está encendida y fija?',
+        leds: { power: 'on-green', los: 'off', pon: 'on-warn' },
+        activeLed: 'PON',
         options: [
-            { label: 'Sí, realizar cierre', next: '6.3_SUMMARY', type: 'success' },
-            { label: 'Falla aún persiste', next: 'ESCALATE_VISIT', type: 'danger' }
+            { label: 'Sí, quedó fija', next: 'MODE_BIFURCATION', type: 'success' },
+            { label: 'Sigue parpadeando', next: '3.3', type: 'danger' }
+        ]
+    },
+    '3.3': {
+        id: '3.3',
+        title: 'Reconexión en Roseta NS',
+        objective: 'Confirmar conexión del patchcord a la roseta de pared de Nuevo Siglo.',
+        action: 'Indique al cliente: “Desconecte y vuelva a conectar el patchcord en la roseta de la pared”. Identifique la roseta con sticker de NS. Si hay dos, asegúrese de usar la de NS.',
+        question: '¿La luz LED PON está encendida y fija?',
+        leds: { power: 'on-green', los: 'off', pon: 'on-warn' },
+        activeLed: 'PON',
+        options: [
+            { label: 'Sí, quedó fija', next: 'MODE_BIFURCATION', type: 'success' },
+            { label: 'Sigue parpadeando', next: '3.4', type: 'danger' }
+        ]
+    },
+    '3.4': {
+        id: '3.4',
+        case: 'CASO 3: ESCALAMIENTO L3',
+        title: 'Validación con Ledefyl',
+        objective: 'Revisión del módem y comprobación de aprovisionamiento.',
+        action: 'Operador: Llame a Ledefyl (Tels: 26262680). Solicite revisión del aprovisionamiento del equipo. Cliente: Manejo de espera.',
+        question: '¿La luz PON sincronizó tras la gestión con Ledefyl?',
+        leds: { power: 'on-green', los: 'off', pon: 'on-warn' },
+        activeLed: 'PON',
+        options: [
+            { label: 'Sí, sincronizó', next: 'MODE_BIFURCATION', type: 'success' },
+            { label: 'Falla persiste', next: 'ESCALATE_VISIT', type: 'danger' }
         ]
     },
 
@@ -217,38 +245,80 @@ const TREE = {
     // CASO 4: INTERNET
     '4.0': {
         id: '4.0',
-        case: 'CASO 4: LUZ INTERNET (PPPoE)',
-        title: 'Sesión de Datos',
-        objective: 'Validar la navegación IP.',
-        question: '¿La luz INTERNET está encendida?',
+        case: 'CASO 4: LUZ INTERNET',
+        title: 'Verificación de luz LED INTERNET',
+        objective: 'Confirmar que el servicio de internet esté activo en el módem.',
+        action: 'Interpretación de estados:<br>• Encendida/Parpadeando: Conexión activa.<br>• Apagada: Problema de aprovisionamiento, sincronización o red.',
+        question: '¿La luz LED INTERNET está encendida o parpadeando?',
         leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'off' },
         activeLed: 'INTERNET',
         options: [
-            { label: 'Sí, navega OK', next: '5.0', type: 'success' },
+            { label: 'Sí, encendida', next: '4.5', type: 'success' },
             { label: 'No, está apagada', next: '4.1', type: 'danger' }
         ]
     },
     '4.1': {
         id: '4.1',
-        title: 'Estado Comercial',
-        objective: 'Descartar deuda o suspensión.',
-        question: '¿El cliente se encuentra al día con sus pagos?',
-        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-red' },
+        title: 'Reinicio del Módem',
+        objective: 'Restablecer la conexión de Internet mediante un reinicio del hardware.',
+        action: 'Indique al cliente: “Presione el botón rojo ON/OFF en la parte trasera para apagar y volver a encender el equipo”. Alternativa: desenchufar fuente 10s. Espere 30 segundos.',
+        question: '¿La luz LED INTERNET encendió tras el reinicio?',
+        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'off' },
+        activeLed: 'INTERNET',
         options: [
-            { label: 'Sí, al día', next: '4.2', type: 'success' },
-            { label: 'Con deuda / Pendiente', next: 'ESCALATE_COMMERCIAL', type: 'danger' }
+            { label: 'Sí, encendió', next: '4.5', type: 'success' },
+            { label: 'No, sigue apagada', next: '4.2', type: 'danger' }
         ]
     },
     '4.2': {
         id: '4.2',
-        title: 'Solicitud Ledefyl BRAS',
-        objective: 'Reconfiguración de discado.',
-        action: 'Contacte a Ledefyl para resetear sesión PPPoE.',
-        question: '¿Se restableció la luz de Internet?',
-        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-red' },
+        title: 'Estado Financiero Comercial',
+        objective: 'Comprobar que el servicio no esté suspendido por impagos.',
+        action: 'Operador: revise en el sistema comercial si existen suspensiones. Cliente: manejo de la espera.',
+        question: '¿El servicio está al día y la luz sigue apagada?',
+        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'off' },
+        activeLed: 'INTERNET',
         options: [
-            { label: 'Sí, solucionado', next: '5.0', type: 'success' },
-            { label: 'No, derivar N2', next: '6.3_SUMMARY', type: 'danger' }
+            { label: 'SÍ (Al día / Sigue Off)', next: '4.3', type: 'success' },
+            { label: 'NO (Deuda / Suspendido)', next: 'CASE_COMMERCIAL_DEBT', type: 'danger' }
+        ]
+    },
+    '4.3': {
+        id: '4.3',
+        title: 'Verificación de Discado PPPoE',
+        objective: 'Comprobar junto a Ledefyl las credenciales de discado.',
+        action: 'Operador: llame al 26262680 (Ledefyl). Informe: “El servicio es el número de abonado, LED INTERNET no enciende, POWER OK, LOS OFF, PON OK. Por favor comprueben si ven algo fuera de lo esperado”.',
+        question: '¿Realizó la gestión con Ledefyl?',
+        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'off' },
+        activeLed: 'INTERNET',
+        options: [
+            { label: 'Gestión completada', next: '4.4', type: 'success' },
+            { label: 'Falla persistente', next: 'ESCALATE_VISIT', type: 'danger' }
+        ]
+    },
+    '4.4': {
+        id: '4.4',
+        title: 'Post Verificación de Discado',
+        objective: 'Confirmar si la luz sincronizó tras el reajuste de credenciales.',
+        question: '¿La luz LED INTERNET está ahora encendida o parpadeando?',
+        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'off' },
+        activeLed: 'INTERNET',
+        options: [
+            { label: 'Sí, sincronizó', next: '4.5', type: 'success' },
+            { label: 'No, coordinar visita', next: 'ESCALATE_VISIT', type: 'danger' }
+        ]
+    },
+    '4.5': {
+        id: '4.5',
+        case: 'CONECTIVIDAD DEL CLIENTE',
+        title: 'Identificación del Tipo de Conexión',
+        objective: 'Determinar si el dispositivo usa red inalámbrica (Wi-Fi) o cableada (LAN).',
+        action: 'Referencias:<br>• LAN: Conectado con cable Ethernet.<br>• Wi-Fi: Conexión inalámbrica (WLAN).',
+        question: '¿El dispositivo que desea revisar está conectado por Wi-Fi o por cable de red?',
+        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-green' },
+        options: [
+            { label: 'Por Wi-Fi', next: '5.0', type: 'success' },
+            { label: 'Por Cable (LAN)', next: '6.0', type: 'no' }
         ]
     },
 
@@ -256,26 +326,63 @@ const TREE = {
     '5.0': {
         id: '5.0',
         case: 'CASO 5: LUZ WIFI',
-        title: 'Cobertura Inalámbrica',
-        objective: 'Verificar estabilidad de la red Wi-Fi.',
-        question: '¿El cliente puede conectarse y navegar?',
-        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-green', wifi: 'on-green' },
+        title: 'Verificación de Luz LED Wi-Fi',
+        objective: 'Confirmar que la red inalámbrica esté activa en el módem.',
+        action: 'Referencias:<br>• Encendida: Red activa y disponible.<br>• Apagada/Parpadeando: Problema de configuración o hardware.',
+        question: '¿La luz LED Wi-Fi está encendida y fija?',
+        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-green', wifi: 'off' },
         activeLed: 'WIFI',
         options: [
-            { label: 'Sí, conexión estable', next: '6.0', type: 'success' },
-            { label: 'Cortes / Lentitud', next: '5.1', type: 'danger' }
+            { label: 'Sí, encendida', next: '5.2', type: 'success' },
+            { label: 'No, está apagada', next: '5.1', type: 'danger' }
         ]
     },
     '5.1': {
         id: '5.1',
-        title: 'Ajuste de Espectro',
-        objective: 'Cambio de canal por interferencia.',
-        action: 'Indique al cliente que apague aparatos que hagan ruido y cambie de canal desde el portal.',
-        question: '¿Mejoró la señal?',
-        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-green', wifi: 'on-warn' },
+        title: 'Activación Manual Wi-Fi',
+        objective: 'Encender la red inalámbrica mediante el botón físico del equipo.',
+        action: 'Indique al cliente: “Presione el botón blanco WPS/Wi-Fi en el lateral de la terminal por un segundo”.',
+        question: '¿La luz LED Wi-Fi encendió ahora?',
+        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-green', wifi: 'off' },
+        activeLed: 'WIFI',
         options: [
-            { label: 'Sí, mejoró', next: '6.0', type: 'success' },
-            { label: 'Sigue mal', next: 'ESCALATE_VISIT', type: 'danger' }
+            { label: 'Sí, encendió', next: '5.2', type: 'success' },
+            { label: 'No enciende', next: 'ESCALATE_VISIT', type: 'danger' }
+        ]
+    },
+    '5.2': {
+        id: '5.2',
+        title: 'Conexión a la Red',
+        objective: 'Vincular el dispositivo del cliente a la red inalámbrica del servicio.',
+        action: 'Indique al cliente: “Utilice las credenciales de autenticación (nombre de red y contraseña) para conectarse a su red”.',
+        question: '¿Logró conectarse exitosamente a la red?',
+        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-green', wifi: 'on-green' },
+        activeLed: 'WIFI',
+        options: [
+            { label: 'Sí, conectado', next: '5.4', type: 'success' },
+            { label: 'No puede conectar', next: '5.3', type: 'danger' }
+        ]
+    },
+    '5.3': {
+        id: '5.3',
+        title: 'Recuperación de Credenciales',
+        objective: 'Configurar parámetros SSID/Password vía interfaz web interna.',
+        action: 'Requiere: PC + Cable Ethernet.<br>1. Conecte PC al puerto LAN del módem.<br>2. En Navegador: http://192.168.1.1 (User: user / Pass: user1234).<br>3. Local Network -> WLAN -> WLAN SSID Configuration.<br>4. Cambie Nombre y Contraseña, guarde y reinicie equipo.',
+        question: '¿Logró recuperar el acceso tras este procedimiento?',
+        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-green', wifi: 'on-green' },
+        options: [
+            { label: 'Sí, acceso recuperado', next: '5.4', type: 'success' },
+            { label: 'Falla persistente', next: 'ESCALATE_VISIT', type: 'danger' }
+        ]
+    },
+    '5.4': {
+        id: '5.4',
+        title: 'Verificación de Otros Dispositivos',
+        objective: 'Asegurar la conectividad total en el domicilio.',
+        question: '¿Hay algún otro dispositivo que el cliente quiera revisar?',
+        options: [
+            { label: 'Sí, revisar otro', next: '4.5', type: 'success' },
+            { label: 'No, gestión completa', next: '6.1', type: 'no' }
         ]
     },
 
@@ -311,16 +418,18 @@ const TREE = {
     'ESCALATE_VISIT': {
         id: 'N2-DERIVADO',
         case: 'DERIVACIÓN TÉCNICA',
-        title: 'Visita Técnica / Campo',
-        question: '¿Confirma envío de móvil a domicilio?',
-        options: [{ label: 'Confirmar', next: '6.3_SUMMARY', type: 'success' }]
+        title: 'Coordinación de Visita Técnica',
+        question: '¿Confirma el envío de personal técnico al domicilio del abonado?',
+        options: [{ label: 'Confirmar Visita Técnica', next: '6.3_SUMMARY', type: 'success' }]
     },
-    'ESCALATE_COMMERCIAL': {
-        id: 'N2-COMERCIAL',
-        case: 'DERIVACIÓN COMERCIAL',
-        title: 'Gestión Administrativa',
-        question: '¿El cliente acepta ser derivado a Cobranzas?',
-        options: [{ label: 'Confirmar', next: '6.3_SUMMARY', type: 'success' }]
+    'CASE_COMMERCIAL_DEBT': {
+        id: 'CIERRE-COMERCIAL',
+        case: 'ESTADO COMERCIAL',
+        title: 'Gestión por Suspensión Administrativa',
+        objective: 'Notificar deuda y finalizar gestión técnica.',
+        action: 'Indique al cliente: “Su servicio se encuentra suspendido. Para restaurar la conexión, debe actualizar su situación económica mediante los canales de cobro habilitados”.',
+        question: '¿El cliente comprendió que debe regularizar su pago para recuperar el servicio?',
+        options: [{ label: 'Sí, Finalizar gestión', next: '6.3_SUMMARY', type: 'success' }]
     },
     'ERR_NO_POWER': {
         id: 'CIERRE-ELECTRICO',
@@ -457,6 +566,7 @@ class App {
         main.className = 'app-main fade-in';
         if (this.state.node === '0.1') this.renderStart(main, step);
         else if (this.state.node === '0.2') this.renderTriage(main, step);
+        else if (this.state.node === 'ESCALATE_VISIT') this.renderEscalation(main, step);
         else if (step.type === 'final') this.renderSummary(main, step);
         else this.renderStep(main, step);
         this.mount.appendChild(main);
@@ -551,6 +661,50 @@ class App {
                     `).join('')}
                 </div>
                 <button class="btn btn-back" style="margin: 0.5rem auto 0;" onclick="app.dispatch('BACK')">Volver</button>
+            </div>
+        `;
+        container.appendChild(div);
+    }
+
+    renderEscalation(container, step) {
+        // Find last technical objective in history
+        let reason = "Falla técnica no resuelta en Nivel 1.";
+        for (let i = this.state.history.length - 1; i >= 0; i--) {
+            const prevId = this.state.history[i];
+            const prevStep = TREE[prevId];
+            if (prevStep && prevStep.objective) {
+                reason = prevStep.objective;
+                break;
+            }
+        }
+
+        const div = document.createElement('div');
+        div.className = 'view';
+        div.innerHTML = `
+            <div class="diagnostic-box" style="border-color: var(--danger);">
+                <div class="case-indicator" style="color: var(--danger); border-bottom-color: rgba(239, 68, 68, 0.2);">
+                    <span>${step.case}</span>
+                    <span>PROTOCOLO AGOTADO</span>
+                </div>
+                
+                <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid var(--danger); border-radius: var(--radius-md); padding: 1.5rem; margin: 1rem 0;">
+                    <h3 style="color: var(--danger); margin-bottom: 0.5rem; font-size: 1rem;">MOTIVO DE LA VISITA:</h3>
+                    <p style="font-size: 1.2rem; font-weight: 700; color: var(--text-main);">${reason}</p>
+                </div>
+
+                <div class="dialogue-bubble" style="background: var(--secondary); margin-bottom: 1rem;">
+                    <p class="dialogue-text">${step.question}</p>
+                </div>
+
+                <div class="actions">
+                    ${(step.options || []).map(opt => `
+                        <button class="btn btn-yes" style="background: var(--danger);" 
+                                onclick="app.dispatch('NAVIGATE', '${opt.next}')">
+                            ${opt.label}
+                        </button>
+                    `).join('')}
+                </div>
+                <button class="btn btn-back" style="margin: 0.5rem auto 0;" onclick="app.dispatch('BACK')">Volver al diagnóstico</button>
             </div>
         `;
         container.appendChild(div);
