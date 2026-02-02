@@ -170,7 +170,7 @@ body {
 }
 
 .instruction-card::before {
-    content: '⚙️ INSTRUCCIÓN PARA EL CLIENTE';
+    content: 'INSTRUCCIÓN PARA EL CLIENTE';
     position: absolute;
     top: -10px;
     left: 15px;
@@ -200,7 +200,7 @@ body {
 }
 
 .dialogue-bubble::before {
-    content: '💬 PREGUNTA AL ABONADO';
+    content: 'PREGUNTA AL ABONADO';
     position: absolute;
     top: -10px;
     left: 15px;
@@ -274,12 +274,22 @@ body {
 }
 
 .btn-back {
-    background: white;
-    border: 1px solid var(--border);
-    color: var(--secondary);
-    font-size: 0.8rem;
-    min-width: 100px;
-    padding: 0.5rem 1rem;
+    background: var(--secondary);
+    color: white;
+    font-size: 0.9rem;
+    min-width: 140px;
+    padding: 0.75rem 1.5rem;
+    box-shadow: 0 4px 0px #475569;
+}
+
+.btn-back:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 0px #475569;
+}
+
+.btn-back:active {
+    transform: translateY(2px);
+    box-shadow: 0 0px 0px #475569;
 }
 
 /* --- Footer --- */

@@ -1,14 +1,14 @@
 /**
- * NS-STI v5.5.0 - GOLD MASTER PREMIUM UI/UX
- * Enhanced diagnostic engine with clear separation of Instruction, Dialogue, and Actions.
+ * NS-STI v5.6.0 - PROFESSIONAL MASTER
+ * Enterprise UI without emojis. Optimized CRM reporting with one-click copy.
  */
 
 const CONFIG = {
-    VERSION: '5.5.0 (Premium UI)',
+    VERSION: '5.6.0 (Professional)',
     BRAND: 'Nuevo Siglo',
     MODELS: {
-        F6600: { id: 'F6600', name: 'ZTE F6600', icon: '📡', desc: '4 Antenas' },
-        F1611A: { id: 'F1611A', name: 'ZTE F1611A', icon: '📶', desc: '2 Antenas' }
+        F6600: { id: 'F6600', name: 'ZTE F6600', icon: 'M', desc: '4 Antenas' },
+        F1611A: { id: 'F1611A', name: 'ZTE F1611A', icon: 'M', desc: '2 Antenas' }
     }
 };
 
@@ -17,7 +17,7 @@ const TREE = {
         id: '0.1',
         case: 'CASO 0: ATENCIÓN DE LLAMADA',
         title: 'Inicio de Gestión',
-        desc: 'Bienvenido al asistente de soporte técnico FTTH.',
+        desc: 'Soporte Técnico FTTH - Panel de Control.',
         next: '0.2'
     },
     '0.2': {
@@ -35,7 +35,7 @@ const TREE = {
         title: 'Integridad Eléctrica',
         objective: 'Confirmar suministro de energía al equipo.',
         question: '¿La luz LED POWER está encendida y fija?',
-        leds: { power: 'off' }, // Start OFF, only ON after "Yes"
+        leds: { power: 'off' },
         activeLed: 'POWER',
         options: [
             { label: 'Sí, está encendida', next: '2.0', type: 'success' },
@@ -47,6 +47,7 @@ const TREE = {
         title: 'Suministro Eléctrico Dominical',
         objective: 'Descartar corte general de luz.',
         question: '¿Cuenta con energía eléctrica en el resto de su casa?',
+        leds: { power: 'off' },
         options: [
             { label: 'Sí, hay energía', next: '1.2', type: 'success' },
             { label: 'No hay energía', next: 'ERR_NO_POWER', type: 'danger' }
@@ -58,6 +59,7 @@ const TREE = {
         objective: 'Verificar el estado del botón físico.',
         action: 'Presione firmemente el botón rojo ON/OFF en la parte posterior del equipo.',
         question: '¿Logró encender la luz POWER?',
+        leds: { power: 'off' },
         options: [
             { label: 'Sí, encendió', next: '2.0', type: 'success' },
             { label: 'No enciende', next: '1.3', type: 'danger' }
@@ -69,6 +71,7 @@ const TREE = {
         objective: 'Asegurar conexión de la fuente de poder.',
         action: 'Verifique que el transformador esté bien conectado al módem y al tomacorriente.',
         question: '¿La luz Power encendió ahora?',
+        leds: { power: 'off' },
         options: [
             { label: 'Sí, encendió', next: '2.0', type: 'success' },
             { label: 'No enciende', next: '1.5', type: 'danger' }
@@ -81,7 +84,7 @@ const TREE = {
         objective: 'Falla eléctrica persistente sin resolución técnica.',
         action: 'Informe al cliente que se enviará un técnico para revisar el equipo o fuente.',
         question: '¿Confirma la apertura del ticket por falla de Energía?',
-        leds: { power: 'off', los: 'off', pon: 'off' },
+        leds: { power: 'off' },
         options: [
             { label: 'Confirmar Derivación', next: '6.3_SUMMARY', type: 'success' },
             { label: 'Volver a intentar', next: '1.0', type: 'danger' }
@@ -95,7 +98,7 @@ const TREE = {
         title: 'Sincronismo de Fibra',
         objective: 'Verificar la llegada de señal óptica.',
         question: '¿La luz LOS está apagada?',
-        leds: { power: 'on-green', los: 'off' }, // LOS starts off in question
+        leds: { power: 'on-green', los: 'off' },
         activeLed: 'LOS',
         options: [
             { label: 'Sí, está apagada', next: '3.0', type: 'success' },
@@ -108,7 +111,7 @@ const TREE = {
         objective: 'Detectar quiebres o daños en la fibra.',
         action: 'Revise el cable amarillo (fibra). No debe estar doblado, apretado o cortado.',
         question: '¿Se apagó la luz roja (LOS)?',
-        leds: { power: 'on-green', los: 'on-red', pon: 'off' },
+        leds: { power: 'on-green', los: 'on-red' },
         activeLed: 'LOS',
         options: [
             { label: 'Sí, se apagó', next: '3.0', type: 'success' },
@@ -122,7 +125,7 @@ const TREE = {
         objective: 'Falla física de señal sin resolución por usuario.',
         action: 'Derive a Soporte de Segundo Nivel por posible rotura de fibra externa.',
         question: '¿Confirma derivación a N2 por señal LOS?',
-        leds: { power: 'on-green', los: 'on-red', pon: 'off' },
+        leds: { power: 'on-green', los: 'on-red' },
         options: [
             { label: 'Confirmar Derivación', next: '6.3_SUMMARY', type: 'success' },
             { label: 'Volver al inicio', next: '0.1', type: 'danger' }
@@ -136,7 +139,7 @@ const TREE = {
         title: 'Vinculación Lógica',
         objective: 'Confirmar el enlace con la central (OLT).',
         question: '¿La luz PON está verde y fija?',
-        leds: { power: 'on-green', los: 'off', pon: 'off' }, // PON unknown until confirmed
+        leds: { power: 'on-green', los: 'off', pon: 'off' },
         activeLed: 'PON',
         options: [
             { label: 'Sí, está fija', next: 'MODE_BIFURCATION', type: 'success' },
@@ -149,6 +152,7 @@ const TREE = {
         objective: 'Forzar nueva sesión lógica.',
         action: 'Reinicie el módem desenchufándolo 10 segundos.',
         question: '¿La luz PON quedó fija tras el reinicio?',
+        leds: { power: 'on-green', los: 'off', pon: 'off' },
         options: [
             { label: 'Sí, sincronizó', next: 'MODE_BIFURCATION', type: 'success' },
             { label: 'Sigue parpadeando', next: '3.2', type: 'danger' }
@@ -180,7 +184,7 @@ const TREE = {
         objective: 'Capa física y lógica operativas.',
         action: 'Informe al cliente que el servicio está UP. La red interna es privada.',
         question: '¿Finalizar atención en Bridge?',
-        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'off', wifi: 'off', lan: 'off' },
+        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'off' },
         options: [{ label: 'Finalizar Gestión', next: '6.3_SUMMARY', type: 'success' }]
     },
 
@@ -200,11 +204,22 @@ const TREE = {
     },
     '4.1': {
         id: '4.1',
-        title: 'Reset de Sesión BRAS',
-        objective: 'Liberar sesión PPPoE bloqueada.',
-        action: 'Solicite a L3 un reset de puerto en el BRAS.',
-        question: '¿Se restableció la navegación?',
-        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-green' },
+        title: 'Estado Comercial',
+        objective: 'Descartar deuda o suspensión.',
+        question: '¿El cliente se encuentra al día con sus pagos?',
+        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-red' },
+        options: [
+            { label: 'Sí, al día', next: '4.2', type: 'success' },
+            { label: 'Con deuda / Pendiente', next: 'ESCALATE_COMMERCIAL', type: 'danger' }
+        ]
+    },
+    '4.2': {
+        id: '4.2',
+        title: 'Solicitud Ledefyl BRAS',
+        objective: 'Reconfiguración de discado.',
+        action: 'Contacte a Ledefyl para resetear sesión PPPoE.',
+        question: '¿Se restableció la luz de Internet?',
+        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-red' },
         options: [
             { label: 'Sí, solucionado', next: '5.0', type: 'success' },
             { label: 'No, derivar N2', next: '6.3_SUMMARY', type: 'danger' }
@@ -231,6 +246,7 @@ const TREE = {
         objective: 'Cambio de canal por interferencia.',
         action: 'Indique al cliente que apague aparatos que hagan ruido y cambie de canal desde el portal.',
         question: '¿Mejoró la señal?',
+        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-green', wifi: 'on-warn' },
         options: [
             { label: 'Sí, mejoró', next: '6.0', type: 'success' },
             { label: 'Sigue mal', next: 'ESCALATE_VISIT', type: 'danger' }
@@ -297,13 +313,27 @@ class App {
             mode: null,
             logs: [],
             startTime: new Date(),
-            prevLeds: {} // Persistence helper
+            prevLeds: {}
         };
         this.mount = document.getElementById('app');
         this.init();
     }
 
     init() { this.render(); }
+
+    copyToClipboard() {
+        const area = document.getElementById('crm-area');
+        area.select();
+        document.execCommand('copy');
+        const btn = document.getElementById('copy-btn');
+        const originalText = btn.innerHTML;
+        btn.innerHTML = '¡Copiado!';
+        btn.classList.add('copy-success');
+        setTimeout(() => {
+            btn.innerHTML = originalText;
+            btn.classList.remove('copy-success');
+        }, 2000);
+    }
 
     dispatch(action, data) {
         if (action === 'NAVIGATE') {
@@ -317,7 +347,6 @@ class App {
                 return;
             }
 
-            // Save LED state of current node before leaving
             const currentStep = TREE[this.state.node];
             if (currentStep.leds) this.state.prevLeds = { ...this.state.prevLeds, ...currentStep.leds };
 
@@ -342,7 +371,6 @@ class App {
         const step = TREE[this.state.node];
         this.mount.innerHTML = '';
 
-        // --- HEADER ---
         const header = document.createElement('header');
         header.className = 'app-header';
         header.innerHTML = `
@@ -365,7 +393,6 @@ class App {
         `;
         this.mount.appendChild(header);
 
-        // --- MAIN ---
         const main = document.createElement('main');
         main.className = 'app-main fade-in';
         if (this.state.node === '0.1') this.renderStart(main, step);
@@ -374,7 +401,6 @@ class App {
         else this.renderStep(main, step);
         this.mount.appendChild(main);
 
-        // --- FOOTER ---
         this.renderTechnicalFooter(step);
     }
 
@@ -384,7 +410,7 @@ class App {
                 <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">${step.title}</h1>
                 <p style="color: var(--text-muted); margin-bottom: 3rem;">${step.desc}</p>
                 <button class="btn btn-yes" style="margin: 0 auto;" onclick="app.dispatch('NAVIGATE', '${step.next}')">
-                    Iniciar Atención 📞
+                    Iniciar Atención
                 </button>
             </div>
         `;
@@ -401,7 +427,7 @@ class App {
                     ${Object.values(CONFIG.MODELS).map(hw => `
                         <div class="selection-card ${this.state.model === hw.id ? 'active' : ''}" 
                              onclick="app.dispatch('SET_TRIAGE', {model: '${hw.id}'})">
-                            <div class="icon-box">${hw.icon}</div>
+                            <div class="icon-box">MODEM</div>
                             <strong>${hw.name}</strong>
                         </div>
                     `).join('')}
@@ -420,7 +446,7 @@ class App {
                     <button class="btn btn-yes" style="margin: 0 auto;"
                             ${!this.state.model || !this.state.mode ? 'disabled' : ''}
                             onclick="app.dispatch('NAVIGATE', '${step.next}')">
-                        Comenzar Diagnóstico 🚀
+                        Comenzar Diagnóstico
                     </button>
                 </div>
             </div>
@@ -436,26 +462,16 @@ class App {
                     <span>${step.case || 'DIAGNÓSTICO'}</span>
                     <span>OBJETIVO: ${step.objective || 'N/A'}</span>
                 </div>
-                
-                ${step.action ? `
-                    <div class="instruction-card">
-                        <p class="instruction-text">${step.action}</p>
-                    </div>
-                ` : ''}
-
-                <div class="dialogue-bubble">
-                    <p class="dialogue-text">${step.question}</p>
-                </div>
-                
+                ${step.action ? `<div class="instruction-card"><p class="instruction-text">${step.action}</p></div>` : ''}
+                <div class="dialogue-bubble"><p class="dialogue-text">${step.question}</p></div>
                 <div class="actions">
                     ${(step.options || []).map(opt => `
-                        <button class="btn btn-${opt.type === 'success' ? 'yes' : 'no'}" 
-                                onclick="app.dispatch('NAVIGATE', '${opt.next}')">
+                        <button class="btn btn-${opt.type === 'success' ? 'yes' : 'no'}" onclick="app.dispatch('NAVIGATE', '${opt.next}')">
                             ${opt.label}
                         </button>
                     `).join('')}
                 </div>
-                <button class="btn btn-back" style="margin: 1rem auto 0;" onclick="app.dispatch('BACK')">← Volver</button>
+                <button class="btn btn-back" style="margin: 1rem auto 0;" onclick="app.dispatch('BACK')">Volver</button>
             </div>
         `;
         container.appendChild(div);
@@ -463,34 +479,42 @@ class App {
 
     renderSummary(container, step) {
         container.innerHTML = `
-            <div class="view">
-                <div class="title-section">
+            <div class="view" style="display: flex; flex-direction: column; height: 100%;">
+                <div class="title-section" style="margin-bottom: 1rem;">
                     <h2>${step.title}</h2>
-                    <p>Gestión finalizada. Copie el reporte para el CRM.</p>
+                    <p>Reporte optimizado para gestión interna.</p>
                 </div>
-                <textarea class="summary-area" readonly>--- REPORTE STI ---
+                
+                <textarea id="crm-area" class="summary-area" readonly>--- REPORTE STI ---
 ID CIERRE: ${this.state.node}
 EQUIPO: ${this.state.model} | MODO: ${this.state.mode}
 ---------------------------
-LOGS:
+PASOS EJECUTADOS:
 ${this.state.logs.join('\n')}
 ---------------------------</textarea>
-                <button class="btn btn-yes" style="margin: 1rem auto;" onclick="app.dispatch('RESET')">Nueva Atención</button>
+
+                <div class="actions" style="margin-top: 0.5rem;">
+                    <button id="copy-btn" class="btn btn-yes" onclick="app.copyToClipboard()">
+                        Copiar Reporte
+                    </button>
+                    <button class="btn btn-back" onclick="app.dispatch('RESET')">
+                        Nueva Atención
+                    </button>
+                </div>
             </div>
         `;
     }
 
     renderTechnicalFooter(step) {
+        const isTechnicalNode = this.state.node !== '0.1' && this.state.node !== '0.2' && step.type !== 'final';
         const f = document.createElement('footer');
         f.className = 'app-footer';
         const leds = ['POWER', 'LOS', 'PON', 'INTERNET', 'WIFI', 'LAN'];
-
-        // Logic for persisting leds
         const currentLeds = { ...this.state.prevLeds, ...(step.leds || {}) };
 
         f.innerHTML = `
             <div class="led-monitor">
-                ${leds.map(l => {
+                ${leds.filter(l => currentLeds.hasOwnProperty(l.toLowerCase())).map(l => {
             const key = l.toLowerCase();
             let status = currentLeds[key] || 'off';
             if (this.state.mode === 'Bridge' && (l === 'INTERNET' || l === 'WIFI')) status = 'disabled';
@@ -498,7 +522,7 @@ ${this.state.logs.join('\n')}
             return `
                         <div class="led-item">
                             <div class="led-circle ${status} ${isEvaluating ? 'active' : ''}"></div>
-                            <span class="led-label">${l}</span>
+                            <span class="led-label" style="${isEvaluating ? 'color: var(--primary); font-weight: 800;' : ''}">${l}</span>
                         </div>
                     `;
         }).join('')}
