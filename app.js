@@ -525,10 +525,11 @@ class App {
         }
 
         if (action === 'SET_OPERATOR') {
-            this.state.operatorEmail = data.toLowerCase();
+            this.state.operatorEmail = data.trim().toLowerCase();
             const btn = document.getElementById('access-btn');
-            const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.state.operatorEmail);
-            if (btn) btn.disabled = !isEmailValid;
+            // Basic username validation (at least 2 chars, no spaces)
+            const isValid = this.state.operatorEmail.length >= 2 && !/\s/.test(this.state.operatorEmail);
+            if (btn) btn.disabled = !isValid;
             return;
         }
 
@@ -642,23 +643,30 @@ class App {
     }
 
     renderStart(container, step) {
-        const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.state.operatorEmail || '');
+        const isValid = (this.state.operatorEmail || '').length >= 2 && !/\s/.test(this.state.operatorEmail);
         container.innerHTML = `
             <div class="view" style="text-align:center;">
                 <h1 style="font-size: 2.2rem; margin-bottom: 0.5rem;">${step.title}</h1>
                 <p style="color: var(--text-muted); margin-bottom: 2rem;">${step.desc}</p>
                 
-                <div class="input-group" style="margin-bottom: 2rem;">
-                    <label class="input-label">Correo Corporativo</label>
-                    <input type="email" id="op-email" class="subscriber-input" 
-                           placeholder="ejemplo@nuevosiglo.com.uy" 
-                           value="${this.state.operatorEmail || ''}"
-                           oninput="app.dispatch('SET_OPERATOR', this.value)">
+                <div class="input-group" style="margin-bottom: 0.5rem; max-width: 450px;">
+                    <label class="input-label">Usuario Técnico</label>
+                    <div style="display: flex; align-items: stretch; background: white; border-radius: var(--radius-md); border: 2px solid var(--border); overflow: hidden;">
+                        <input type="text" id="op-user" 
+                               style="border: none; padding: 0.75rem 1rem; font-size: 1.1rem; flex: 1; outline: none; font-weight: 600;"
+                               placeholder="su_nombre" 
+                               value="${this.state.operatorEmail || ''}"
+                               oninput="app.dispatch('SET_OPERATOR', this.value)">
+                        <div style="background: #f1f5f9; padding: 0.75rem 1rem; color: var(--secondary); font-weight: 700; display: flex; align-items: center; border-left: 2px solid var(--border);">
+                            @nuevosiglo.com.uy
+                        </div>
+                    </div>
                 </div>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 2.5rem;">Identifíquese con su nombre de usuario de red.</p>
 
                 <div style="display: block;">
                     <button id="access-btn" class="btn btn-yes" style="margin: 0 auto;" 
-                            ${!isEmailValid ? 'disabled' : ''}
+                            ${!isValid ? 'disabled' : ''}
                             onclick="app.dispatch('NAVIGATE', {id: '${step.next}', label: 'Iniciar Triage'})">
                         Acceder al Panel
                     </button>
@@ -800,7 +808,7 @@ class App {
                 
                 <textarea id="crm-area" class="summary-area" readonly>--- REPORTE STI ---
 ID ABONADO: ${this.state.subscriberId}
-OPERADOR: ${this.state.operatorEmail}
+OPERADOR: ${this.state.operatorEmail}@nuevosiglo.com.uy
 ID CIERRE: ${this.state.node}
 EQUIPO: ${this.state.model} | MODO: ${this.state.mode}
 INICIO: ${this.state.startTime.toLocaleString()}
