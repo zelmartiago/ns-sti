@@ -450,17 +450,27 @@ const TREE = {
 
 class App {
     constructor() {
-        this.state = {
-            node: '0.1',
-            history: [],
-            subscriberId: '',
-            model: null,
-            mode: null,
-            logs: [],
-            startTime: new Date()
-        };
+        const saved = localStorage.getItem('ns_sti_state');
+        if (saved) {
+            this.state = JSON.parse(saved);
+            this.state.startTime = new Date(this.state.startTime);
+        } else {
+            this.state = {
+                node: '0.1',
+                history: [],
+                subscriberId: '',
+                model: null,
+                mode: null,
+                logs: [],
+                startTime: new Date()
+            };
+        }
         this.mount = document.getElementById('app');
         this.init();
+    }
+
+    saveState() {
+        localStorage.setItem('ns_sti_state', JSON.stringify(this.state));
     }
 
     init() { this.render(); }
@@ -544,8 +554,10 @@ class App {
             if (this.state.history.length > 0) this.state.node = this.state.history.pop();
         }
         if (action === 'RESET') {
+            localStorage.removeItem('ns_sti_state');
             this.state = { node: '0.1', history: [], subscriberId: '', model: null, mode: null, logs: [], startTime: new Date() };
         }
+        this.saveState();
         this.render();
     }
 
