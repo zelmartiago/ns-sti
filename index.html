@@ -4,50 +4,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NS-STI | Motor de Diagnóstico FTTH</title>
+  <title>NS-STI | Technical Diagnostic Engine</title>
+  <!-- Modern Styling -->
   <link rel="stylesheet" href="styles.css">
-  <link rel="icon"
-    href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📡</text></svg>">
 </head>
 
 <body>
-  <header class="app-header">
-    <!-- Renderizado dinámico desde app.js (Breadcrumbs y Ayudas Visuales) -->
-    <div class="header-main-text" style="width: 100%; border: none;">Cargando interfaz de soporte...</div>
-  </header>
-
-  <main class="main-content">
-    <!-- Contenido principal del paso de diagnóstico -->
-    <div class="welcome-screen">
-      <h1 class="welcome-title">Cargando asistente...</h1>
+  <div id="app" class="app-container">
+    <!-- The entire application is mounted here via app.js -->
+    <div class="loader-container" style="height: 100vh; display: flex; align-items: center; justify-content: center;">
+      <p>Initializing Intelligent Diagnostic Engine...</p>
     </div>
-  </main>
+  </div>
 
-  <footer class="app-footer" style="display: none;">
-    <!-- Monitoreo dinámico de LEDs -->
-    <div class="led-group">
-      <div class="led-box"><span class="led-name">POWER</span>
-        <div class="led-dot"></div>
-      </div>
-      <div class="led-box"><span class="led-name">LOS</span>
-        <div class="led-dot"></div>
-      </div>
-      <div class="led-box"><span class="led-name">PON</span>
-        <div class="led-dot"></div>
-      </div>
-      <div class="led-box"><span class="led-name">INTERNET</span>
-        <div class="led-dot"></div>
-      </div>
-      <div class="led-box"><span class="led-name">WIFI</span>
-        <div class="led-dot"></div>
-      </div>
-      <div class="led-box"><span class="led-name">LANx</span>
-        <div class="led-dot"></div>
-      </div>
-    </div>
-  </footer>
-
-  <!-- Script de lógica único -->
+  <!-- Core Logic -->
   <script src="app.js"></script>
 </body>
 
