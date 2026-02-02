@@ -1,15 +1,14 @@
 /**
- * NS-STI v5.0.0 - GOLD MASTER REBORN
- * Combines high-fidelity UI/UX with the original formal diagnostic structure.
- * Features: Node tracking, persistent LED monitoring, and full case loop.
+ * NS-STI v5.5.0 - GOLD MASTER PREMIUM UI/UX
+ * Enhanced diagnostic engine with clear separation of Instruction, Dialogue, and Actions.
  */
 
 const CONFIG = {
-    VERSION: '5.0.0 (Gold Master)',
+    VERSION: '5.5.0 (Premium UI)',
     BRAND: 'Nuevo Siglo',
     MODELS: {
-        F6600: { id: 'F6600', name: 'ZTE F6600', icon: '📡', desc: '4 Antenas (Redondas)' },
-        F1611A: { id: 'F1611A', name: 'ZTE F1611A', icon: '📶', desc: '2 Antenas (Planas)' }
+        F6600: { id: 'F6600', name: 'ZTE F6600', icon: '📡', desc: '4 Antenas' },
+        F1611A: { id: 'F1611A', name: 'ZTE F1611A', icon: '📶', desc: '2 Antenas' }
     }
 };
 
@@ -18,15 +17,14 @@ const TREE = {
         id: '0.1',
         case: 'CASO 0: ATENCIÓN DE LLAMADA',
         title: 'Inicio de Gestión',
-        desc: 'Soporte Técnico Nivel 1 - Inicie el triaje para comenzar.',
-        cta: 'Iniciar Atención',
+        desc: 'Bienvenido al asistente de soporte técnico FTTH.',
         next: '0.2'
     },
     '0.2': {
         id: '0.2',
-        case: 'CASO 0: TRIAJE',
-        title: 'Selección de Terminal y Modo',
-        desc: 'Identifique el equipo y modo de operación del servicio.',
+        case: 'CASO 0: TRIAJE PRIMARIO',
+        title: 'Selección de Entorno',
+        desc: 'Identifique el equipo y modo de operación.',
         next: '1.0'
     },
 
@@ -35,7 +33,7 @@ const TREE = {
         id: '1.0',
         case: 'CASO 1: LUZ POWER',
         title: 'Integridad Eléctrica',
-        objective: 'Confirmar que el módem recibe energía.',
+        objective: 'Confirmar suministro de energía al equipo.',
         question: '¿La luz LED POWER está encendida y fija?',
         leds: { power: 'on-green', los: 'off', pon: 'off', internet: 'off', wifi: 'off', lan: 'off' },
         activeLed: 'POWER',
@@ -46,56 +44,47 @@ const TREE = {
     },
     '1.1': {
         id: '1.1',
-        title: 'Suministro en Domicilio',
-        objective: 'Descartar corte de energía general.',
-        question: '¿Tiene energía eléctrica en su casa en este momento?',
+        title: 'Suministro Eléctrico Dominical',
+        objective: 'Descartar corte general de luz.',
+        question: '¿Cuenta con energía eléctrica en el resto de su casa?',
         options: [
-            { label: 'Sí, tengo energía', next: '1.2', type: 'success' },
+            { label: 'Sí, hay energía', next: '1.2', type: 'success' },
             { label: 'No hay energía', next: 'ERR_NO_POWER', type: 'danger' }
         ]
     },
     '1.2': {
         id: '1.2',
-        title: 'Botón ON/OFF',
-        objective: 'Verificar encendido manual del equipo.',
-        action: 'Presione y suelte el botón rojo ON/OFF en la parte trasera.',
-        question: '¿Encendió la luz POWER?',
+        title: 'Acción de Encendido (Manual)',
+        objective: 'Verificar el estado del botón físico.',
+        action: 'Presione firmemente el botón rojo ON/OFF en la parte posterior del equipo.',
+        question: '¿Logró encender la luz POWER?',
         options: [
-            { label: 'Sí', next: '2.0', type: 'success' },
-            { label: 'Todavía no', next: '1.3', type: 'danger' }
+            { label: 'Sí, encendió', next: '2.0', type: 'success' },
+            { label: 'No enciende', next: '1.3', type: 'danger' }
         ]
     },
     '1.3': {
         id: '1.3',
-        title: 'Conexión del Transformador',
-        objective: 'Asegurar alimentación estable.',
-        action: 'Revise la conexión en el módem y el tomacorriente.',
-        question: '¿Encendió la luz POWER?',
+        title: 'Revisión de Cableado AC',
+        objective: 'Asegurar conexión de la fuente de poder.',
+        action: 'Verifique que el transformador esté bien conectado al módem y al tomacorriente.',
+        question: '¿La luz Power encendió ahora?',
         options: [
-            { label: 'Sí', next: '2.0', type: 'success' },
-            { label: 'Todavía no', next: '1.4', type: 'danger' }
-        ]
-    },
-    '1.4': {
-        id: '1.4',
-        title: 'Prueba de Enchufe',
-        objective: 'Descartar falla en el tomacorriente.',
-        action: 'Pruebe conectar el módem en otro enchufe cercano.',
-        question: '¿Logró encender?',
-        options: [
-            { label: 'Sí', next: '2.0', type: 'success' },
-            { label: 'No, persiste apagado', next: '1.5', type: 'danger' }
+            { label: 'Sí, encendió', next: '2.0', type: 'success' },
+            { label: 'No enciende', next: '1.5', type: 'danger' }
         ]
     },
     '1.5': {
         id: '1.5',
-        title: 'Cambio de Transformador',
-        objective: 'Validar falla del adaptador DC.',
-        action: 'Use el transformador del Deco o Mesh si es compatible.',
-        question: '¿Funciona ahora?',
+        case: 'CASO 1: ESCALAMIENTO N2',
+        title: 'Derivación a Soporte Nivel 2',
+        objective: 'Falla eléctrica persistente sin resolución técnica.',
+        action: 'Informe al cliente que se enviará un técnico para revisar el equipo o fuente.',
+        question: '¿Confirma la apertura del ticket por falla de Energía?',
+        leds: { power: 'off', los: 'off', pon: 'off' },
         options: [
-            { label: 'Sí', next: '2.0', type: 'success' },
-            { label: 'No, derivar visita', next: 'ESCALATE_VISIT', type: 'danger' }
+            { label: 'Confirmar Derivación', next: '6.3_SUMMARY', type: 'success' },
+            { label: 'Volver a intentar', next: '1.0', type: 'danger' }
         ]
     },
 
@@ -103,36 +92,40 @@ const TREE = {
     '2.0': {
         id: '2.0',
         case: 'CASO 2: LUZ LOS',
-        title: 'Sincronismo Físico',
-        objective: 'Verificar la integridad de la señal de fibra.',
-        question: '¿La luz PON está verde fija y la LOS está apagada?',
-        leds: { power: 'on-green', los: 'on-red', pon: 'on-green', internet: 'off' },
+        title: 'Sincronismo de Fibra',
+        objective: 'Verificar la llegada de señal óptica.',
+        question: '¿La luz LOS está apagada?',
+        leds: { power: 'on-green', los: 'off', pon: 'off', internet: 'off' },
         activeLed: 'LOS',
         options: [
-            { label: 'Sí, sincronismo OK', next: '3.0', type: 'success' },
-            { label: 'No, LOS roja / PON titila', next: '2.1', type: 'danger' }
+            { label: 'Sí, está apagada', next: '3.0', type: 'success' },
+            { label: 'No, está encendida', next: '2.1', type: 'danger' }
         ]
     },
     '2.1': {
         id: '2.1',
-        title: 'Revisión de Fibra',
-        objective: 'Detectar daños físicos en el patchcord.',
-        action: 'Inspeccione el cable amarillo. No debe estar doblado o cortado.',
-        question: '¿Se normalizaron los LEDs?',
+        title: 'Inspección de Patchcord',
+        objective: 'Detectar quiebres o daños en la fibra.',
+        action: 'Revise el cable amarillo (fibra). No debe estar doblado, apretado o cortado.',
+        question: '¿Se apagó la luz roja (LOS)?',
+        leds: { power: 'on-green', los: 'on-red', pon: 'off' },
+        activeLed: 'LOS',
         options: [
-            { label: 'Sí', next: '3.0', type: 'success' },
-            { label: 'No', next: '2.2', type: 'danger' }
+            { label: 'Sí, se apagó', next: '3.0', type: 'success' },
+            { label: 'Sigue encendida', next: '2.2', type: 'danger' }
         ]
     },
     '2.2': {
         id: '2.2',
-        title: 'Reconexión de Bornes',
-        objective: 'Asegurar conexión en Módem y Roseta.',
-        action: 'Desconecte y vuelva a insertar el conector verde hasta el click.',
-        question: '¿Se apagó la luz LOS?',
+        case: 'CASO 2: ESCALAMIENTO N2',
+        title: 'Derivación por Falla Acometida',
+        objective: 'Falla física de señal sin resolución por usuario.',
+        action: 'Derive a Soporte de Segundo Nivel por posible rotura de fibra externa.',
+        question: '¿Confirma derivación a N2 por señal LOS?',
+        leds: { power: 'on-green', los: 'on-red', pon: 'off' },
         options: [
-            { label: 'Sí', next: '3.0', type: 'success' },
-            { label: 'No, derivar visita', next: 'ESCALATE_VISIT', type: 'danger' }
+            { label: 'Confirmar Derivación', next: '6.3_SUMMARY', type: 'success' },
+            { label: 'Volver al inicio', next: '0.1', type: 'danger' }
         ]
     },
 
@@ -140,36 +133,38 @@ const TREE = {
     '3.0': {
         id: '3.0',
         case: 'CASO 3: LUZ PON',
-        title: 'Enlace Lógico FTTH',
-        objective: 'Confirmar vinculación con la OLT.',
-        question: '¿Luz PON fija?',
+        title: 'Vinculación Lógica',
+        objective: 'Confirmar el enlace con la central (OLT).',
+        question: '¿La luz PON está verde y fija?',
         leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'off' },
         activeLed: 'PON',
         options: [
-            { label: 'Sí, fija', next: 'MODE_BIFURCATION', type: 'success' },
+            { label: 'Sí, está fija', next: 'MODE_BIFURCATION', type: 'success' },
             { label: 'No, parpadea', next: '3.1', type: 'danger' }
         ]
     },
     '3.1': {
         id: '3.1',
-        title: 'Reinicio Lógico',
-        objective: 'Forzar nueva sesión de fibra.',
-        action: 'Reinicie el equipo desde el botón ON/OFF.',
-        question: '¿Quedó fija tras el reinicio?',
+        title: 'Reinicio de Sincronismo',
+        objective: 'Forzar nueva sesión lógica.',
+        action: 'Reinicie el módem desenchufándolo 10 segundos.',
+        question: '¿La luz PON quedó fija tras el reinicio?',
         options: [
-            { label: 'Sí', next: 'MODE_BIFURCATION', type: 'success' },
+            { label: 'Sí, sincronizó', next: 'MODE_BIFURCATION', type: 'success' },
             { label: 'Sigue parpadeando', next: '3.2', type: 'danger' }
         ]
     },
     '3.2': {
         id: '3.2',
-        title: 'Soporte Ledefyl (L3)',
-        objective: 'Reaprovisionamiento remoto.',
-        action: 'Solicite reaprovisionamiento a Ledefyl (26262680).',
-        question: '¿Se confirmó el éxito del proceso?',
+        case: 'CASO 3: ESCALAMIENTO L3',
+        title: 'Derivación por Falla de Autenticación',
+        objective: 'El equipo sincroniza señal pero no vincula ID.',
+        action: 'Contacte a Ledefyl (L3) para reaprovisionar la ONT.',
+        question: '¿Se solicitó el reaprovisionamiento?',
+        leds: { power: 'on-green', los: 'off', pon: 'on-green' },
         options: [
-            { label: 'Confirmado y funcionando', next: 'MODE_BIFURCATION', type: 'success' },
-            { label: 'Falla persistente', next: 'ESCALATE_VISIT', type: 'danger' }
+            { label: 'Sí, realizar cierre', next: '6.3_SUMMARY', type: 'success' },
+            { label: 'Falla aún persiste', next: 'ESCALATE_VISIT', type: 'danger' }
         ]
     },
 
@@ -179,47 +174,40 @@ const TREE = {
         condition: (state) => state.mode === 'Bridge' ? 'CASE_BRIDGE' : '4.0'
     },
     'CASE_BRIDGE': {
-        id: 'BRIDGE',
-        title: 'Límite de Responsabilidad',
-        objective: 'Cierre de ciclo por demarcación.',
-        text: 'Servicio verificado en Capa 2 satisfactoriamente. El equipo está en BRIDGE y la red privada es responsabilidad del abonado.',
-        question: '¿Finalizar atención?',
-        options: [{ label: 'Finalizar', next: '6.3_SUMMARY', type: 'success' }]
+        id: 'BRIDGE-OK',
+        case: 'CIERRE POR DEMARCACIÓN',
+        title: 'Servicio en Bridge Validado',
+        objective: 'Capa física y lógica operativas.',
+        action: 'Informe al cliente que el servicio está UP. La red interna es privada.',
+        question: '¿Finalizar atención en Bridge?',
+        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'off', wifi: 'off', lan: 'off' },
+        options: [{ label: 'Finalizar Gestión', next: '6.3_SUMMARY', type: 'success' }]
     },
 
     // CASO 4: INTERNET
     '4.0': {
         id: '4.0',
-        case: 'CASO 4: LUZ INTERNET (DISCADO PPPoE)',
-        title: 'Navegación y Sesión',
-        objective: 'Verificar sesión de datos activa.',
-        question: '¿Luz INTERNET activa (fija o parpadeo)?',
-        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-green' },
+        case: 'CASO 4: LUZ INTERNET (PPPoE)',
+        title: 'Sesión de Datos',
+        objective: 'Validar la navegación IP.',
+        question: '¿La luz INTERNET está encendida?',
+        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-red' },
         activeLed: 'INTERNET',
         options: [
             { label: 'Sí, navega OK', next: '5.0', type: 'success' },
-            { label: 'No, LED apagado', next: '4.1', type: 'danger' }
+            { label: 'No, está apagada', next: '4.1', type: 'danger' }
         ]
     },
     '4.1': {
         id: '4.1',
-        title: 'Estado Comercial',
-        objective: 'Descartar deuda o suspensión.',
-        question: '¿El cliente se encuentra al día con sus pagos?',
+        title: 'Reset de Sesión BRAS',
+        objective: 'Liberar sesión PPPoE bloqueada.',
+        action: 'Solicite a L3 un reset de puerto en el BRAS.',
+        question: '¿Se restableció la navegación?',
+        leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-green' },
         options: [
-            { label: 'Sí, al día', next: '4.2', type: 'success' },
-            { label: 'Con deuda / Pendiente', next: 'ESCALATE_COMMERCIAL', type: 'danger' }
-        ]
-    },
-    '4.2': {
-        id: '4.2',
-        title: 'Solicitud Ledefyl BRAS',
-        objective: 'Reconfiguración de discado.',
-        action: 'Contacte a Ledefyl para resetear sesión PPPoE.',
-        question: '¿Se restableció la luz de Internet?',
-        options: [
-            { label: 'Sí, restablecido', next: '5.0', type: 'success' },
-            { label: 'No, persiste falla', next: 'ESCALATE_VISIT', type: 'danger' }
+            { label: 'Sí, solucionado', next: '5.0', type: 'success' },
+            { label: 'No, derivar N2', next: 'ESCALATE_VISIT', type: 'danger' }
         ]
     },
 
@@ -227,25 +215,25 @@ const TREE = {
     '5.0': {
         id: '5.0',
         case: 'CASO 5: LUZ WIFI',
-        title: 'Red Inalámbrica',
-        objective: 'Asegurar cobertura local.',
-        question: '¿El cliente navega correctamente por Wi-Fi?',
+        title: 'Cobertura Inalámbrica',
+        objective: 'Verificar estabilidad de la red Wi-Fi.',
+        question: '¿El cliente puede conectarse y navegar?',
         leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-green', wifi: 'on-green' },
         activeLed: 'WIFI',
         options: [
-            { label: 'Sí, navega bien', next: '6.0', type: 'success' },
-            { label: 'Lentitud o desconexión', next: '5.1', type: 'warn' }
+            { label: 'Sí, conexión estable', next: '6.0', type: 'success' },
+            { label: 'Cortes / Lentitud', next: '5.1', type: 'danger' }
         ]
     },
     '5.1': {
         id: '5.1',
-        title: 'Auditoría de Canales (L3)',
-        objective: 'Optimización de espectro radioféctrico.',
-        action: 'Verifique saturación de canales en soporte L3.',
-        question: '¿Se logró estabilizar?',
+        title: 'Ajuste de Espectro',
+        objective: 'Cambio de canal por interferencia.',
+        action: 'Indique al cliente que apague aparatos que hagan ruido y cambie de canal desde el portal.',
+        question: '¿Mejoró la señal?',
         options: [
-            { label: 'Sí, resuelto', next: '6.0', type: 'success' },
-            { label: 'No, derivar intervención', next: 'ESCALATE_VISIT', type: 'danger' }
+            { label: 'Sí, mejoró', next: '6.0', type: 'success' },
+            { label: 'Sigue mal', next: 'ESCALATE_VISIT', type: 'danger' }
         ]
     },
 
@@ -254,36 +242,43 @@ const TREE = {
         id: '6.0',
         case: 'CASO 6: LUZ LAN',
         title: 'Puertos Ethernet',
-        objective: 'Validar conexiones cableadas.',
-        question: '¿Cables LAN detectados y funcionales?',
+        objective: 'Validar cableado estructurado del cliente.',
+        question: '¿Si conecta una PC por cable, tiene luz en el puerto?',
         leds: { power: 'on-green', los: 'off', pon: 'on-green', internet: 'on-green', wifi: 'on-green', lan: 'on-green' },
         activeLed: 'LAN',
         options: [
-            { label: 'Sí, puertos OK', next: '6.1', type: 'success' },
-            { label: 'Falla de puertos', next: 'ESCALATE_VISIT', type: 'danger' }
+            { label: 'Sí, puerto OK', next: '6.1', type: 'success' },
+            { label: 'No detecta cable', next: 'ESCALATE_VISIT', type: 'danger' }
         ]
     },
     '6.1': {
         id: '6.1',
-        title: 'Validación Speedtest',
-        objective: 'Auditoría de ancho de banda garantizado.',
-        question: '¿Velocidad acorde al plan contratado?',
-        options: [
-            { label: 'Velocidad Correcta', next: '6.3_SUMMARY', type: 'success' },
-            { label: 'Baja performance', next: 'ESCALATE_VISIT', type: 'danger' }
-        ]
+        title: 'Cierre con Satisfacción',
+        objective: 'Auditoría final de servicio.',
+        action: 'Realice un Speedtest y confirme que sea acorde al plan contratado.',
+        question: '¿Finalizamos la atención por éxito técnico?',
+        options: [{ label: 'Finalizar Gestión', next: '6.3_SUMMARY', type: 'success' }]
     },
 
     '6.3_SUMMARY': {
-        id: '6.3',
-        title: 'Finalización / Resumen CRM',
+        id: 'CIERRE',
+        title: 'Resumen CRM STI',
         type: 'final'
     },
 
-    // ESCALAMIENTOS
-    'ESCALATE_VISIT': { title: 'Visita Técnica / N2', question: '¿Confirma derivación por falla técnica persistente?', options: [{ label: 'Confirmar y Resumir', next: '6.3_SUMMARY' }] },
-    'ESCALATE_COMMERCIAL': { title: 'Derivación Comercial', question: 'Indicar al cliente que debe regularizar su situación.', options: [{ label: 'Ir al Resumen', next: '6.3_SUMMARY' }] },
-    'ERR_NO_POWER': { title: 'Cierre: Sin Suministro', question: 'Informar que se reactivará el soporte al volver la luz.', options: [{ label: 'Cerrar', next: '6.3_SUMMARY' }] }
+    'ESCALATE_VISIT': {
+        id: 'N2-DERIVADO',
+        case: 'DERIVACIÓN TÉCNICA',
+        title: 'Visita Técnica / Campo',
+        question: '¿Confirma envío de móvil a domicilio?',
+        options: [{ label: 'Confirmar', next: '6.3_SUMMARY', type: 'success' }]
+    },
+    'ERR_NO_POWER': {
+        id: 'CIERRE-ELECTRICO',
+        title: 'Cierre por Falta de Suministro',
+        question: '¿El cliente comprendió que debe esperar a que vuelva la luz?',
+        options: [{ label: 'Cerrar Llamada', next: '6.3_SUMMARY', type: 'success' }]
+    }
 };
 
 class App {
@@ -294,15 +289,14 @@ class App {
             model: null,
             mode: null,
             logs: [],
-            startTime: new Date()
+            startTime: new Date(),
+            prevLeds: {} // Persistence helper
         };
         this.mount = document.getElementById('app');
         this.init();
     }
 
-    init() {
-        this.render();
-    }
+    init() { this.render(); }
 
     dispatch(action, data) {
         if (action === 'NAVIGATE') {
@@ -316,6 +310,10 @@ class App {
                 return;
             }
 
+            // Save LED state of current node before leaving
+            const currentStep = TREE[this.state.node];
+            if (currentStep.leds) this.state.prevLeds = { ...this.state.prevLeds, ...currentStep.leds };
+
             this.state.history.push(this.state.node);
             this.state.node = nextNodeId;
             if (target.case || target.title) {
@@ -323,20 +321,13 @@ class App {
             }
         }
 
-        if (action === 'SET_TRIAGE') {
-            this.state = { ...this.state, ...data };
-        }
-
+        if (action === 'SET_TRIAGE') this.state = { ...this.state, ...data };
         if (action === 'BACK') {
-            if (this.state.history.length > 0) {
-                this.state.node = this.state.history.pop();
-            }
+            if (this.state.history.length > 0) this.state.node = this.state.history.pop();
         }
-
         if (action === 'RESET') {
-            this.state = { node: '0.1', history: [], model: null, mode: null, logs: [], startTime: new Date() };
+            this.state = { node: '0.1', history: [], model: null, mode: null, logs: [], startTime: new Date(), prevLeds: {} };
         }
-
         this.render();
     }
 
@@ -344,120 +335,120 @@ class App {
         const step = TREE[this.state.node];
         this.mount.innerHTML = '';
 
-        // Header (Redesing with Logo and Node IDs)
+        // --- HEADER ---
         const header = document.createElement('header');
         header.className = 'app-header';
         header.innerHTML = `
             <div class="brand">
                 <div class="brand-logo">NS</div>
-                <div>
-                    <h1 style="font-size: 1.1rem; font-weight:700;">${CONFIG.BRAND}</h1>
-                    <p style="font-size: 0.65rem; color: #64748b;">v${CONFIG.VERSION}</p>
+                <div class="brand-text">
+                    <h1>${CONFIG.BRAND}</h1>
+                    <p>SOPORTE TÉCNICO INTERACTIVO</p>
                 </div>
             </div>
-            <div style="text-align: right;">
+            <div class="header-status">
                 ${this.state.node !== '0.1' ? `
-                    <div style="display:flex; gap: 8px; margin-bottom: 4px; justify-content: flex-end;">
-                        <span class="badge" style="background: #eff6ff; color: #2563eb;">${this.state.model || 'MODELO?'}</span>
-                        <span class="badge" style="background: #f0fdf4; color: #16a34a;">${this.state.mode || 'MODO?'}</span>
+                    <div class="header-badges">
+                        <span class="badge">${this.state.model || '?'}</span>
+                        <span class="badge">${this.state.mode || '?'}</span>
                     </div>
-                    <div style="font-size: 0.7rem; font-weight:700; color: #94a3b8;">NODO ACTUAL: ${step.id}</div>
-                ` : '<span class="badge">SISTEMA LISTO</span>'}
+                    <div class="node-id"># ${step.id}</div>
+                ` : '<span class="badge">LISTO</span>'}
             </div>
         `;
         this.mount.appendChild(header);
 
-        // Body with animations
+        // --- MAIN ---
         const main = document.createElement('main');
         main.className = 'app-main fade-in';
-
         if (this.state.node === '0.1') this.renderStart(main, step);
         else if (this.state.node === '0.2') this.renderTriage(main, step);
         else if (step.type === 'final') this.renderSummary(main, step);
         else this.renderStep(main, step);
-
         this.mount.appendChild(main);
 
-        // Persistent Footer for all technical steps
-        if (this.state.node !== '0.1' && this.state.node !== '0.2' && step.type !== 'final') {
-            this.renderTechnicalFooter(step);
-        }
+        // --- FOOTER ---
+        this.renderTechnicalFooter(step);
     }
 
     renderStart(container, step) {
         container.innerHTML = `
-            <div style="text-align:center; padding: 4rem 1rem;">
-                <div class="icon-box" style="margin: 0 auto 2rem; width: 80px; height: 80px; font-size: 2.5rem;">🤖</div>
+            <div class="view" style="text-align:center;">
                 <h1 style="font-size: 2.5rem; margin-bottom: 1rem;">${step.title}</h1>
-                <p style="color: #64748b; margin-bottom: 3rem; max-width: 500px; margin-inline: auto;">${step.desc}</p>
-                <button class="btn btn-primary" style="padding: 1rem 4rem; font-size: 1.1rem; box-shadow: 0 10px 15px -3px rgba(0, 102, 255, 0.4);" onclick="app.dispatch('NAVIGATE', '${step.next}')">
-                    ${step.cta}
+                <p style="color: var(--text-muted); margin-bottom: 3rem;">${step.desc}</p>
+                <button class="btn btn-yes" style="margin: 0 auto;" onclick="app.dispatch('NAVIGATE', '${step.next}')">
+                    Iniciar Atención 📞
                 </button>
             </div>
         `;
     }
 
     renderTriage(container, step) {
-        const div = document.createElement('div');
-        div.className = 'view';
-        div.innerHTML = `
-            <div class="title-section">
-                <h2>${step.title}</h2>
-                <p>${step.desc}</p>
-            </div>
-            <div class="card-grid">
-                ${Object.values(CONFIG.MODELS).map(hw => `
-                    <div class="selection-card ${this.state.model === hw.id ? 'active' : ''}" 
-                         onclick="app.dispatch('SET_TRIAGE', {model: '${hw.id}'})">
-                        <div class="icon-box">${hw.icon}</div>
-                        <strong>${hw.name}</strong>
-                        <p style="font-size: 0.75rem; color: #64748b; margin-top: 4px;">${hw.desc}</p>
+        container.innerHTML = `
+            <div class="view">
+                <div class="title-section">
+                    <h2>${step.title}</h2>
+                    <p>${step.desc}</p>
+                </div>
+                <div class="card-grid">
+                    ${Object.values(CONFIG.MODELS).map(hw => `
+                        <div class="selection-card ${this.state.model === hw.id ? 'active' : ''}" 
+                             onclick="app.dispatch('SET_TRIAGE', {model: '${hw.id}'})">
+                            <div class="icon-box">${hw.icon}</div>
+                            <strong>${hw.name}</strong>
+                        </div>
+                    `).join('')}
+                </div>
+                <div class="card-grid" style="grid-template-columns: 1fr 1fr; margin-top: 1rem;">
+                    <div class="selection-card ${this.state.mode === 'Standard' ? 'active' : ''}" 
+                         onclick="app.dispatch('SET_TRIAGE', {mode: 'Standard'})">
+                         <strong>MODO STANDARD</strong>
                     </div>
-                `).join('')}
-            </div>
-            <div class="card-grid" style="grid-template-columns: 1fr 1fr; margin-top: 1.5rem;">
-                <div class="selection-card ${this.state.mode === 'Standard' ? 'active' : ''}" 
-                     onclick="app.dispatch('SET_TRIAGE', {mode: 'Standard'})">
-                     <span style="font-size:0.85rem; font-weight:700;">MODO STANDARD</span>
+                    <div class="selection-card ${this.state.mode === 'Bridge' ? 'active' : ''}" 
+                         onclick="app.dispatch('SET_TRIAGE', {mode: 'Bridge'})">
+                         <strong>MODO BRIDGE</strong>
+                    </div>
                 </div>
-                <div class="selection-card ${this.state.mode === 'Bridge' ? 'active' : ''}" 
-                     onclick="app.dispatch('SET_TRIAGE', {mode: 'Bridge'})">
-                     <span style="font-size:0.85rem; font-weight:700;">MODO BRIDGE</span>
+                <div style="margin-top: 2rem; text-align:center;">
+                    <button class="btn btn-yes" style="margin: 0 auto;"
+                            ${!this.state.model || !this.state.mode ? 'disabled' : ''}
+                            onclick="app.dispatch('NAVIGATE', '${step.next}')">
+                        Comenzar Diagnóstico 🚀
+                    </button>
                 </div>
-            </div>
-            <div style="margin-top: 3rem; text-align:center;">
-                <button class="btn btn-primary btn-wide" 
-                        ${!this.state.model || !this.state.mode ? 'disabled' : ''}
-                        onclick="app.dispatch('NAVIGATE', '${step.next}')">
-                    Iniciar Diagnóstico Técnico
-                </button>
             </div>
         `;
-        container.appendChild(div);
     }
 
     renderStep(container, step) {
         const div = document.createElement('div');
-        div.className = 'diagnostic-box view';
+        div.className = 'view';
         div.innerHTML = `
-            <div class="step-header">
-                ${step.case ? `<span class="step-label">${step.case}</span>` : ''}
-                <h2>${step.title}</h2>
-            </div>
-            ${step.objective ? `<div class="objective-banner">${step.objective}</div>` : ''}
-            ${step.action ? `<div class="action-card" style="margin-bottom: 2rem; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 12px; font-size: 0.95rem; line-height: 1.6;"><strong>⚙️ ACCIÓN:</strong> ${step.action}</div>` : ''}
-            
-            <div class="question-bubble">${step.question}</div>
-            
-            <div class="actions">
-                ${(step.options || []).map(opt => `
-                    <button class="btn btn-${opt.type || 'primary'}" style="min-width: 180px;" onclick="app.dispatch('NAVIGATE', '${opt.next}')">
-                        ${opt.label}
-                    </button>
-                `).join('')}
-            </div>
-            <div style="margin-top: 2rem; border-top: 1px solid #e2e8f0; padding-top: 1rem;">
-                <button class="btn btn-outline" style="width: 100%; border: none; font-size: 0.8rem; color: #94a3b8;" onclick="app.dispatch('BACK')">← VOLVER AL PASO ANTERIOR</button>
+            <div class="diagnostic-box">
+                <div class="case-indicator">
+                    <span>${step.case || 'DIAGNÓSTICO'}</span>
+                    <span>OBJETIVO: ${step.objective || 'N/A'}</span>
+                </div>
+                
+                ${step.action ? `
+                    <div class="instruction-card">
+                        <p class="instruction-text">${step.action}</p>
+                    </div>
+                ` : ''}
+
+                <div class="dialogue-bubble">
+                    <p class="dialogue-text">${step.question}</p>
+                </div>
+                
+                <div class="actions">
+                    ${(step.options || []).map(opt => `
+                        <button class="btn btn-${opt.type === 'success' ? 'yes' : 'no'}" 
+                                onclick="app.dispatch('NAVIGATE', '${opt.next}')">
+                            ${opt.label}
+                        </button>
+                    `).join('')}
+                </div>
+                <button class="btn btn-back" style="margin: 1rem auto 0;" onclick="app.dispatch('BACK')">← Volver</button>
             </div>
         `;
         container.appendChild(div);
@@ -465,23 +456,19 @@ class App {
 
     renderSummary(container, step) {
         container.innerHTML = `
-            <div class="title-section">
-                <h2>${step.title}</h2>
-                <p>Resumen final de la gestión STI.</p>
-            </div>
-            <textarea class="summary-area" readonly>
---- REPORTE FINAL NS-STI ---
-ID NODO CIERRE: ${this.state.node}
+            <div class="view">
+                <div class="title-section">
+                    <h2>${step.title}</h2>
+                    <p>Gestión finalizada. Copie el reporte para el CRM.</p>
+                </div>
+                <textarea class="summary-area" readonly>--- REPORTE STI ---
+ID CIERRE: ${this.state.node}
 EQUIPO: ${this.state.model} | MODO: ${this.state.mode}
-DURACIÓN: ${Math.round((new Date() - this.state.startTime) / 60000)} min
 ---------------------------
-PASOS EJECUTADOS:
+LOGS:
 ${this.state.logs.join('\n')}
----------------------------
-DIAGNÓSTICO: ATENCIÓN FINALIZADA.
-            </textarea>
-            <div class="actions" style="margin-top: 2rem;">
-                <button class="btn btn-primary btn-wide" onclick="app.dispatch('RESET')">Nueva Atención</button>
+---------------------------</textarea>
+                <button class="btn btn-yes" style="margin: 1rem auto;" onclick="app.dispatch('RESET')">Nueva Atención</button>
             </div>
         `;
     }
@@ -491,28 +478,23 @@ DIAGNÓSTICO: ATENCIÓN FINALIZADA.
         f.className = 'app-footer';
         const leds = ['POWER', 'LOS', 'PON', 'INTERNET', 'WIFI', 'LAN'];
 
+        // Logic for persisting leds
+        const currentLeds = { ...this.state.prevLeds, ...(step.leds || {}) };
+
         f.innerHTML = `
             <div class="led-monitor">
                 ${leds.map(l => {
             const key = l.toLowerCase();
-            let status = (step.leds && step.leds[key]) || 'off';
-            // Blinding rule
+            let status = currentLeds[key] || 'off';
             if (this.state.mode === 'Bridge' && (l === 'INTERNET' || l === 'WIFI')) status = 'disabled';
-
             const isEvaluating = step.activeLed === l;
             return `
-                        <div class="led-item" style="${isEvaluating ? 'transform: translateY(-5px);' : ''}">
-                            <div class="led-circle ${status} ${isEvaluating ? 'active' : ''}" 
-                                 style="${isEvaluating ? 'border: 3px solid #000; scale: 1.2;' : ''}"></div>
-                            <span class="led-label" style="${isEvaluating ? 'color: #000; font-weight: 800;' : ''}">${l}</span>
-                            ${isEvaluating ? '<div style="width: 4px; height: 4px; background: var(--primary); border-radius: 50%; margin-top: 4px;"></div>' : ''}
+                        <div class="led-item">
+                            <div class="led-circle ${status} ${isEvaluating ? 'active' : ''}"></div>
+                            <span class="led-label">${l}</span>
                         </div>
                     `;
         }).join('')}
-            </div>
-            <div style="font-size: 0.65rem; color: #94a3b8; font-weight: 700; display:flex; align-items:center; gap: 8px;">
-                <div style="width: 8px; height: 8px; background: var(--accent); border-radius: 50%;"></div>
-                ESTADO TERMINAL EN TIEMPO REAL
             </div>
         `;
         this.mount.appendChild(f);
