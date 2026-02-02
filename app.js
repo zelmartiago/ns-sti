@@ -1,6 +1,6 @@
 /**
  * NS-STI Final High-Fidelity Diagnostic Engine
- * v1.9.0 - Case 4 refined & Case 5 implemented (Wi-Fi & Connectivity)
+ * v2.0.0 - Case 6 & Final Closing Protocol (Gold Master)
  */
 
 const diagnosticTree = {
@@ -334,8 +334,8 @@ const diagnosticTree = {
         leds: { power: 'green', los: 'off', pon: 'green', internet: 'eval' },
         activeLED: 'INTERNET',
         options: [
-            { label: 'Fija / Parpadeante', nextStep: '4.3' },
-            { label: 'Apagada', nextStep: '4.2_commercial' }
+            { label: 'Si (Fija/Parpadeo)', nextStep: '4.3' },
+            { label: 'No (Apagada)', nextStep: '4.2_commercial' }
         ]
     },
     'internet_check_images': {
@@ -406,8 +406,9 @@ const diagnosticTree = {
         id: '4.2_ledefyl',
         title: 'Verificación de discado PPPoE',
         procedure: 'Resolución caso INTERNET - Paso 3',
-        objective: 'comprobar junto a ledefyl si estan bien las credenciales del discado PPPoE.',
-        action: '<strong>Operador:</strong> llamar al 26262680 (Ledefyl) y comunicarle:<br><div style="font-style: italic; margin-top: 10px; border-left: 3px solid #ccc; padding-left: 10px;">“El servicio es el número xx-xx, LED INTERNET no enciende, LED POWER está encendida, LED LOS está apagada y LED PON está encendida. Por favor comprueben desde su parte si ven algo fuera de lo esperado”</div><br><strong>Para el Cliente:</strong> usar manejo de la espera durante el proceso.',
+        objective: 'Corregir posibles errores de credenciales o colgado de sesión en el BRAS.',
+        instruction: 'Solicite a Ledefyl la reconfiguración del discado y espere la confirmación.',
+        action: '<strong>Operador:</strong> llamar al 26262680 (Ledefyl) y comunicarle:<br><div style="font-style: italic; margin-top: 10px; border-left: 3px solid #ccc; padding-left: 10px;">“El servicio es el número xx-xx, LED INTERNET no enciende, LED POWER está encendida, LED LOS está apagada y LED PON está encendida. Por favor realicen una reconfiguración de discado PPPoE”</div>',
         question: '',
         hasDescriptiveImage: true,
         descriptiveImageStep: 'ledefyl_call_images',
@@ -429,7 +430,7 @@ const diagnosticTree = {
         title: 'Post verificación de discado PPPoE',
         procedure: 'Resolución caso INTERNET - Paso 3 (cont.)',
         objective: 'comprobar las credenciales del discado PPPoE fueron reacomodadas en el procedimiento previo.',
-        question: '“¿La luz LED INTERNET está encendida o parpadeando?”',
+        question: '“¿La luz LED INTERNET quedó encendida o parpadeando?”',
         hasDescriptiveImage: true,
         descriptiveImageStep: 'pppoe_verify_images',
         leds: { power: 'green', los: 'off', pon: 'green', internet: 'eval' },
@@ -448,11 +449,11 @@ const diagnosticTree = {
     },
     '4.3': {
         id: '4.3',
-        title: 'Comprobación de Navegación',
-        procedure: 'Caso 4: INTERNET > Validación de Navegación',
-        objective: 'Asegurar que el flujo de datos sea efectivo en los dispositivos del cliente.',
-        action: 'Pedir al cliente que intente ingresar a un sitio web de prueba o realice una búsqueda.',
-        question: '“¿Puede confirmar si ahora puede navegar correctamente en sus dispositivos?”',
+        title: 'Comprobación de Navegación Inicial',
+        procedure: 'Caso 4: INTERNET > Validación de Sesión',
+        objective: 'Asegurar que el flujo de datos sea efectivo antes de pasar a la red local.',
+        action: 'Pedir al cliente que intente ingresar a un sitio web de prueba.',
+        question: '“¿Logra navegar correctamente en sus dispositivos tras el ajuste de sesión?”',
         leds: { power: 'green', los: 'off', pon: 'green', internet: 'green' },
         activeLED: 'INTERNET',
         options: [
@@ -466,8 +467,8 @@ const diagnosticTree = {
         procedure: 'Coordinar visita técnica',
         objective: 'Cierre por falla en INTERNET',
         instruction: 'En caso de tener fallas en el discado de internet, estos son los teléfonos de contacto con despacho.',
-        action: 'Preparar y registrar la información relevante de la atención durante la llamada.',
-        question: 'El agente debe marcar el caso como "Falla de Navegación tras ajuste lógico" para informar al técnico domiciliario.',
+        action: 'Marcar caso como: "Falla de Navegación tras ajuste lógico".',
+        question: '',
         hasDescriptiveImage: true,
         descriptiveImageStep: 'internet_escalation_images',
         options: [
@@ -497,7 +498,7 @@ const diagnosticTree = {
         activeLED: 'WIFI',
         options: [
             { label: 'WIFI', nextStep: '5.1' },
-            { label: 'LAN', nextStep: 'finish_call' }
+            { label: 'LAN', nextStep: '6.0_lan' }
         ]
     },
     'connection_type_images': {
@@ -578,26 +579,26 @@ const diagnosticTree = {
         objective: 'Asegurar que los parámetros de red sean correctos.',
         instruction: 'Si las luces encienden pero el cliente no puede conectar, solicitar el seteo de credenciales de Wi-Fi.',
         action: 'Coordinar con L3 el cambio de SSID y Password si es necesario.',
-        question: '“¿Logra detectar la red con el nombre acordado y conectar sus dispositivos?”',
+        question: '“¿Logra conectar sus dispositivos con el nombre de red y contraseña confirmados?”',
         leds: { power: 'green', los: 'off', pon: 'green', internet: 'green', wifi: 'green' },
         activeLED: 'WIFI',
         options: [
             { label: 'No', nextStep: 'coordinar_visita_wifi' },
-            { label: 'Si', nextStep: 'finish_call' }
+            { label: 'Si', nextStep: '6.1' }
         ]
     },
     'coordinar_visita_wifi': {
         id: 'coordinar_visita_wifi',
-        title: 'Soporte Técnico a Internet',
+        title: 'Falla Técnica por Wi-Fi',
         procedure: 'Escalamiento',
-        objective: 'Cierre por falla de Wi-Fi',
-        instruction: 'En caso de fallas en el servicio de internet, este es el teléfono de Soporte a Internet.',
-        action: 'Preparar y registrar la información relevante de la atención durante la llamada.',
-        question: 'Detallar que se intentó la activación vía L3 sin éxito.',
+        objective: 'Cierre por falla de radiofrecuencia',
+        instruction: 'Si la activación L3 falla, se escala por posible daño en el módulo de radio del módem.',
+        action: 'Registrar intento fallido por consola.',
+        question: '',
         hasDescriptiveImage: true,
         descriptiveImageStep: 'wifi_escalation_images',
         options: [
-            { label: 'Escalamiento', nextStep: '0.1' }
+            { label: 'Coordinar visita técnica', nextStep: '0.1' }
         ]
     },
     'wifi_escalation_images': {
@@ -606,6 +607,136 @@ const diagnosticTree = {
         procedure: 'Ayuda Visual',
         type: 'images_grid',
         images: ['assets/node_wifi_escalation.png']
+    },
+    '6.0_lan': {
+        id: '6.0_lan',
+        title: 'Verificación de luces LANx',
+        procedure: 'Diagnóstico de LED Caso 6: LANx',
+        objective: 'confirmar que los puertos LANx del módem estén activos.',
+        references: [
+            { label: 'Luces encendidas', text: 'indica que la conexión por cable (Ethernet) está activa.' },
+            { label: 'Luces apagadas', text: 'problema de cable, puerto o configuración del dispositivo.' }
+        ],
+        question: '“¿Las luces LED LANx, en los puertos donde hay cables conectados, están encendidas?”',
+        hasDescriptiveImage: true,
+        descriptiveImageStep: 'lan_check_images',
+        leds: { power: 'green', los: 'off', pon: 'green', internet: 'green', lanx: 'eval' },
+        activeLED: 'LANx',
+        options: [
+            { label: 'No', nextStep: 'coordinar_visita_lan' },
+            { label: 'Si', nextStep: '6.1_speedtest' }
+        ]
+    },
+    'lan_check_images': {
+        id: 'lan_check_images',
+        title: 'Guía Visual: Puertos LAN',
+        procedure: 'Ayuda Visual',
+        type: 'images_grid',
+        images: ['assets/node_6_lan_check.png']
+    },
+    '6.1_speedtest': {
+        id: '6.1_speedtest',
+        title: 'Comprobar el acceso a internet (LAN)',
+        procedure: 'Resolución caso LAN - Paso 2',
+        objective: 'Validar funcionamiento de internet por cable.',
+        action: '<strong>Indica al cliente:</strong> “Utilice el navegador web y dirígase al sitio speedtest.net. Presione INICIO.”',
+        question: '“¿Logró comprobar su acceso a internet con éxito y la velocidad es adecuada?”',
+        hasDescriptiveImage: true,
+        descriptiveImageStep: 'speedtest_images',
+        leds: { power: 'green', los: 'off', pon: 'green', internet: 'green', lanx: 'green' },
+        activeLED: 'LANx',
+        options: [
+            { label: 'No', nextStep: '6.2_advanced' },
+            { label: 'Si', nextStep: '6.1' }
+        ]
+    },
+    'speedtest_images': {
+        id: 'speedtest_images',
+        title: 'Guía Visual: Speedtest',
+        procedure: 'Ayuda Visual',
+        type: 'images_grid',
+        images: ['assets/node_6_navigation_test.png']
+    },
+    'coordinar_visita_lan': {
+        id: 'coordinar_visita_lan',
+        title: 'Fallas en los puertos de red',
+        procedure: 'Coordinar visita técnica',
+        objective: 'Cierre por falla física LAN',
+        instruction: 'En caso de tener fallas en los puertos de red, contactar con despacho.',
+        action: 'Registrar estado de puerto apagado con cable conectado.',
+        question: '',
+        hasDescriptiveImage: true,
+        descriptiveImageStep: 'lan_escalation_images',
+        options: [
+            { label: 'Coordinar visita técnica', nextStep: '0.1' }
+        ]
+    },
+    'lan_escalation_images': {
+        id: 'lan_escalation_images',
+        title: 'Guía Visual: Fallas LAN',
+        procedure: 'Ayuda Visual',
+        type: 'images_grid',
+        images: ['assets/node_lan_failure.png']
+    },
+    '6.1': {
+        id: '6.1',
+        title: 'Verificación de Navegación Efectiva (Multi-dispositivo)',
+        procedure: 'Caso 6: COMPROBACIÓN FINAL > Paso 1',
+        objective: 'Asegurar experiencia óptima tras ajustes.',
+        action: 'Solicitar prueba en varios dispositivos (celular, laptop, deco, etc.).',
+        question: '“¿La velocidad se siente adecuada y logra navegar en todos sus dispositivos?”',
+        leds: { power: 'green', los: 'off', pon: 'green', internet: 'green', wifi: 'green', lanx: 'green' },
+        activeLED: 'INTERNET',
+        options: [
+            { label: 'No (Lentitud/Cortes)', nextStep: '6.2_advanced' },
+            { label: 'Si (Óptimo)', nextStep: '6.3_summary' }
+        ]
+    },
+    '6.2_advanced': {
+        id: '6.2_advanced',
+        title: 'Asistencia Avanzada (Soporte Nivel 3)',
+        procedure: 'Caso 6: COMPROBACIÓN FINAL > Paso 2',
+        objective: 'Diagnóstico avanzado de rendimiento.',
+        instruction: 'Solicitar a N3: Comprobar saturación de canales Wi-Fi, latencias o bloqueos DNS.',
+        action: '<strong>Operador:</strong> Coordinar con ingeniería Nivel 3 para revisión de consola remota.',
+        question: '¿Logró resolver el problema con ayuda de L3?',
+        hasDescriptiveImage: true,
+        descriptiveImageStep: 'l3_advanced_images',
+        leds: { power: 'green', los: 'off', pon: 'green', internet: 'green' },
+        activeLED: 'INTERNET',
+        options: [
+            { label: 'Si (Resuelto)', nextStep: '6.3_summary' },
+            { label: 'No (Escalar L2)', nextStep: 'coordinar_visita_advanced' }
+        ]
+    },
+    'l3_advanced_images': {
+        id: 'l3_advanced_images',
+        title: 'Guía Visual: Escalamiento Nivel 3',
+        procedure: 'Ayuda Visual',
+        type: 'images_grid',
+        images: ['assets/node_6_l3_escalation.png']
+    },
+    'coordinar_visita_advanced': {
+        id: 'coordinar_visita_advanced',
+        title: 'Coordinar Visita Técnica (Nivel 2)',
+        procedure: 'Escalamiento por rendimiento',
+        objective: 'Revisión técnica presencial por ruido o interferencia.',
+        action: 'Registrar que persiste lentitud tras validación lógica de Nivel 3.',
+        question: '',
+        options: [
+            { label: 'Finalizar y Registrar Ticket', nextStep: '0.1' }
+        ]
+    },
+    '6.3_summary': {
+        id: '6.3_summary',
+        title: 'Resumen y Cierre del Incidente',
+        procedure: 'Diagnóstico Finalizado > Cierre de Incidente',
+        objective: 'Documentar proceso para CRM.',
+        type: 'summary_closing',
+        question: '“Hemos verificado que su servicio se encuentra funcionando correctamente. ¿Hay algo más en lo que pueda ayudarlo?”',
+        options: [
+            { label: 'Finalizar Diagnóstico', nextStep: '0.1' }
+        ]
     },
     'bridge_info': {
         id: 'bridge_info',
@@ -636,7 +767,8 @@ const diagnosticTree = {
 let state = {
     history: ['0.1'],
     model: 'NO IDENT.',
-    mode: 'NO DEF.'
+    mode: 'NO DEF.',
+    log: [] // To store decisions for summary
 };
 
 const elements = {
@@ -678,7 +810,10 @@ function render() {
 
     // Body
     elements.mainArea.innerHTML = '';
-    if (step.id === '0.1') {
+
+    if (step.type === 'summary_closing') {
+        renderSummary(step);
+    } else if (step.id === '0.1') {
         elements.mainArea.innerHTML = `<div class="welcome-screen"><h1 class="welcome-title">${step.title}</h1><button class="btn btn-iniciar" onclick="handleNext('${step.options[0].nextStep}')">Iniciar</button></div>`;
     } else if (step.type === 'images_grid') {
         elements.mainArea.innerHTML = `<h1 class="step-title">${step.title}</h1><div class="desc-images-grid">${step.images.map(img => `<img src="${img}" class="full-mock-img">`).join('')}</div>`;
@@ -736,11 +871,16 @@ function render() {
             step.options.forEach(opt => {
                 const btn = document.createElement('button');
                 let btnClass = 'btn-standard';
-                if (opt.label === 'Si' || opt.label === 'Confirmado' || opt.label === 'Fija' || opt.label.includes('Parpadeante') || opt.label.includes('Al día') || opt.label === 'Continuar' || opt.label === 'Escalamiento' || opt.label === 'WIFI' || opt.label === 'LAN') btnClass = 'btn-yes';
-                if (opt.label === 'No' || opt.label === 'Parpadea / Apagada' || opt.label === 'Apagada' || opt.label.includes('Suspendido') || opt.label === 'Falla Técnica') btnClass = 'btn-no';
-                if (opt.label.includes('visita técnica') || opt.label.includes('Registrar Ticket')) btnClass = 'btn-yes btn-wide';
-                btn.className = `btn ${btnClass}`; btn.textContent = opt.label;
-                btn.onclick = () => { if (opt.metadata && opt.metadata.mode) state.mode = opt.metadata.mode; handleNext(opt.nextStep); };
+                const label = opt.label;
+                if (label === 'Si' || label === 'Confirmado' || label === 'Fija' || label.includes('Fija') || label.includes('Al día') || label === 'Continuar' || label === 'Escalamiento' || label === 'WIFI' || label === 'LAN' || label.includes('Óptimo')) btnClass = 'btn-yes';
+                if (label === 'No' || label === 'Parpadea / Apagada' || label === 'Apagada' || label.includes('Suspendido') || label === 'Falla Técnica' || label.includes('Lentitud')) btnClass = 'btn-no';
+                if (label.includes('visita técnica') || label.includes('Registrar Ticket') || label.includes('Finalizar Diagnóstico')) btnClass = 'btn-yes btn-wide';
+                btn.className = `btn ${btnClass}`; btn.textContent = label;
+                btn.onclick = () => {
+                    if (opt.metadata && opt.metadata.mode) state.mode = opt.metadata.mode;
+                    state.log.push({ step: step.title, answer: label });
+                    handleNext(opt.nextStep);
+                };
                 intArea.appendChild(btn);
             });
         }
@@ -748,7 +888,7 @@ function render() {
     }
 
     // Footer
-    if (step.id === '0.1' || step.id === '0.2' || step.id === '0.3' || step.id.includes('coordinar_visita') || (step.id.includes('error') && !step.id.includes('commercial')) || step.id === 'finish_call' || step.id === 'coordinar_visita_wifi') {
+    if (step.id === '0.1' || step.id === '0.2' || step.id === '0.3' || step.id.includes('coordinar_visita') || (step.id.includes('error') && !step.id.includes('commercial')) || step.id === 'finish_call' || step.id.includes('escalation_images') || step.type === 'summary_closing') {
         elements.ledArea.style.display = 'none';
     } else {
         elements.ledArea.style.display = 'flex'; elements.ledArea.innerHTML = '<div class="led-group"></div>';
@@ -759,12 +899,57 @@ function render() {
             const isActive = step.activeLED === ledName;
             const box = document.createElement('div'); box.className = `led-box ${isActive ? 'active' : ''}`;
             let dotClass = '';
-            if (ledStatus === 'green' || (isActive && ledStatus === 'eval' && ledName !== 'LOS')) dotClass = 'green';
+            if (ledStatus === 'green' || (isActive && ledStatus === 'eval' && ledName !== 'LOS' && ledName !== 'LANx')) dotClass = 'green';
             else if (ledStatus === 'red' || (isActive && ledName === 'LOS')) dotClass = 'red';
+            else if (ledName === 'LANx' && ledStatus === 'eval') dotClass = 'green';
             box.innerHTML = `<span class="led-name">${ledName}</span><div class="led-dot ${dotClass}"></div>`;
             group.appendChild(box);
         });
     }
+}
+
+function renderSummary(step) {
+    const titleEl = document.createElement('h1'); titleEl.className = 'step-title'; titleEl.textContent = step.title;
+    elements.mainArea.appendChild(titleEl);
+
+    const summaryCard = document.createElement('div');
+    summaryCard.className = 'summary-card';
+
+    let summaryText = `RESUMEN DE DIAGNÓSTICO NS-STI - v2.0.0\n`;
+    summaryText += `----------------------------------------\n`;
+    summaryText += `Modelo: ${state.model} | Modo: ${state.mode}\n`;
+    summaryText += `----------------------------------------\n`;
+    state.log.forEach(entry => {
+        summaryText += `> ${entry.step}: ${entry.answer}\n`;
+    });
+    summaryText += `----------------------------------------\n`;
+    summaryText += `ESTADO FINAL: SERVICIO OPERATIVO`;
+
+    summaryCard.innerHTML = `
+        <p class="objective-text">Copia este resumen para el registro en el CRM:</p>
+        <textarea id="summary-text" class="summary-textarea" readonly>${summaryText}</textarea>
+        <button class="btn btn-standard" onclick="copyToClipboard()" style="margin-top:10px;">Copiar al Portapapeles</button>
+        <div class="question-container" style="margin-top:30px;">
+            <p class="question-label">Pregunta al cliente:</p>
+            <div class="question-bubble"><div class="question-bubble-inner">${step.question}</div></div>
+        </div>
+        <div class="interaction-area">
+            <button class="btn btn-yes btn-wide" onclick="resetApp()">${step.options[0].label}</button>
+        </div>
+    `;
+    elements.mainArea.appendChild(summaryCard);
+}
+
+function copyToClipboard() {
+    const copyText = document.getElementById("summary-text");
+    copyText.select();
+    document.execCommand("copy");
+    alert("Resumen copiado con éxito.");
+}
+
+function resetApp() {
+    state = { history: ['0.1'], model: 'NO IDENT.', mode: 'NO DEF.', log: [] };
+    render();
 }
 
 function handleNext(nextId) { state.history.push(nextId); render(); }
