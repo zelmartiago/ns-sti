@@ -138,6 +138,18 @@ class App {
                 return;
             }
 
+            // Si ambos caminos (WiFi y LAN) ya están diagnosticados,
+            // saltar NAV_CONNECTIVITY directo al cierre satisfactorio (6.1).
+            if (nextNodeId === 'NAV_CONNECTIVITY') {
+                const knownLeds = this.getKnownLeds();
+                const wifiDone = knownLeds['wifi'] === 'on-green';
+                const lanDone = this.state.history.includes('6.0');
+                if (wifiDone && lanDone) {
+                    this.dispatch('NAVIGATE', '6.1');
+                    return;
+                }
+            }
+
             if (currentStep && choiceLabel && currentStep.question) {
                 const time = new Date().toLocaleTimeString([], {
                     hour: '2-digit',

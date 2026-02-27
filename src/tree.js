@@ -366,7 +366,7 @@ export const TREE = {
         question: '¿Hay algún otro dispositivo que el cliente quiera revisar?',
         options: [
             { label: 'Sí, revisar otro', next: 'NAV_CONNECTIVITY', type: 'success' },
-            { label: 'No, gestión completa', next: '6.1', type: 'no' }
+            { label: 'Gestión completa', next: '6.1', type: 'success' }
         ]
     },
 
