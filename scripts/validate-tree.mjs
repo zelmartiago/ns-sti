@@ -27,7 +27,6 @@ export function validateTree(tree) {
         if (node.type === 'logic') {
             if (typeof node.condition !== 'function') {
                 errors.push(`Nodo lógico "${id}" no tiene una función condition(state).`);
-                // eslint-disable-next-line no-continue
                 continue;
             }
             const sampleStates = [{ mode: 'Bridge' }, { mode: 'Standard' }];
@@ -97,8 +96,9 @@ export function validateTree(tree) {
             }
         }
 
+        const EXTERNAL_ENTRY_NODES = new Set(['6.4_ABORTED']);
         for (const id of nodeIds) {
-            if (!reachable.has(id)) {
+            if (!reachable.has(id) && !EXTERNAL_ENTRY_NODES.has(id)) {
                 warnings.push(`Nodo "${id}" no es alcanzable desde el nodo raíz "0.1".`);
             }
         }

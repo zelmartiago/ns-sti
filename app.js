@@ -39,6 +39,7 @@ class App {
                 model: null,
                 mode: null,
                 logs: [],
+                confirmedLeds: {},
                 startTime: new Date(),
                 sessionId: this.generateSessionId()
             };
@@ -69,6 +70,10 @@ class App {
 
     init() {
         this.render();
+    }
+
+    escapeAttr(str) {
+        return String(str).replace(/'/g, "\\'");
     }
 
     registerKeyHandler(step) {
@@ -102,17 +107,21 @@ class App {
     copyToClipboard() {
         const area = document.getElementById('crm-area');
         if (!area) return;
-        area.select();
-        document.execCommand('copy');
         const btn = document.getElementById('copy-btn');
-        if (!btn) return;
-        const originalText = btn.innerHTML;
-        btn.innerHTML = '¡Copiado!';
-        btn.classList.add('copy-success');
-        setTimeout(() => {
-            btn.innerHTML = originalText;
-            btn.classList.remove('copy-success');
-        }, 2000);
+        navigator.clipboard.writeText(area.value).then(() => {
+            if (!btn) return;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '¡Copiado!';
+            btn.classList.add('copy-success');
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.classList.remove('copy-success');
+            }, 2000);
+        }).catch(() => {
+            // Fallback para contextos sin HTTPS o permisos denegados
+            area.select();
+            document.execCommand('copy');
+        });
     }
 
     dispatch(action, data) {
@@ -125,7 +134,7 @@ class App {
 
             if (target.type === 'logic') {
                 const redirect = target.condition(this.state);
-                this.dispatch('NAVIGATE', redirect);
+                this.dispatch('NAVIGATE', { id: redirect, _fromLogic: true });
                 return;
             }
 
@@ -139,7 +148,16 @@ class App {
                 this.state.logs.push(
                     `[${time}] [${nodeId}]${led} ${currentStep.question} -> R: ${choiceLabel}`
                 );
-            } else if (target.case || target.title) {
+                const chosenOption = (currentStep.options || []).find(
+                    (o) => o.label === choiceLabel && o.next === nextNodeId
+                );
+                if (chosenOption && chosenOption.leds) {
+                    this.state.confirmedLeds = {
+                        ...this.state.confirmedLeds,
+                        ...chosenOption.leds
+                    };
+                }
+            } else if (!data._fromLogic && (target.case || target.title)) {
                 this.state.logs.push(
                     `${new Date().toLocaleTimeString()} - Iniciando: ${target.case || target.title}`
                 );
@@ -241,6 +259,7 @@ class App {
                 model: null,
                 mode: null,
                 logs: [],
+                confirmedLeds: {},
                 startTime: new Date(),
                 sessionId: this.generateSessionId()
             };
@@ -265,19 +284,17 @@ class App {
                 </div>
             </div>
             
-            ${
-                this.state.node !== '0.1'
-                    ? `
+            ${this.state.node !== '0.1'
+                ? `
                 <div class="header-controls">
-                    ${
-                        this.state.node !== '0.2' && step.type !== 'final'
-                            ? `
+                    ${this.state.node !== '0.2' && step.type !== 'final'
+                    ? `
                         <button class="btn-abort" onclick="app.dispatch('ABORT_SESSION')">
                             <span>⚠️</span> ABORTAR LLAMADA
                         </button>
                     `
-                            : ''
-                    }
+                    : ''
+                }
                     
                     <div class="status-monitor">
                         <div class="header-badges">
@@ -289,7 +306,7 @@ class App {
                     </div>
                 </div>
             `
-                    : '<div class="header-status"><span class="badge">SISTEMA LISTO</span></div>'
+                : '<div class="header-status"><span class="badge">SISTEMA LISTO</span></div>'
             }
         `;
         this.mount.appendChild(header);
@@ -369,9 +386,8 @@ class App {
 
                 <div class="input-group">
                     <label class="input-label">Identificador del Abonado</label>
-                    <input type="text" id="sub-id" class="subscriber-input ${
-                        !this.state.subscriberId ? 'required-hint' : ''
-                    }" 
+                    <input type="text" id="sub-id" class="subscriber-input ${!this.state.subscriberId ? 'required-hint' : ''
+            }" 
                            placeholder="Número de Contrato" 
                            value="${this.state.subscriberId || ''}"
                            oninput="app.dispatch('SET_SUBSCRIBER', this.value)">
@@ -379,41 +395,36 @@ class App {
 
                 <div class="card-grid">
                     ${Object.values(CONFIG.MODELS)
-                        .map(
-                            (hw) => `
-                        <div class="selection-card ${
-                            this.state.model === hw.id ? 'active' : ''
+                .map(
+                    (hw) => `
+                        <div class="selection-card ${this.state.model === hw.id ? 'active' : ''
                         } ${!this.state.model ? 'required-hint' : ''}" 
                              onclick="app.dispatch('SET_TRIAGE', {model: '${hw.id}'})">
                             <strong style="font-size: 1.2rem;">${hw.name}</strong>
-                            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">${
-                                hw.desc
-                            }</p>
+                            <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">${hw.desc
+                        }</p>
                         </div>
                     `
-                        )
-                        .join('')}
+                )
+                .join('')}
                 </div>
 
                 <div class="card-grid" style="grid-template-columns: 1fr 1fr; margin-top: 1rem;">
-                    <div class="selection-card ${
-                        this.state.mode === 'Standard' ? 'active' : ''
-                    } ${!this.state.mode ? 'required-hint' : ''}" 
+                    <div class="selection-card ${this.state.mode === 'Standard' ? 'active' : ''
+            } ${!this.state.mode ? 'required-hint' : ''}" 
                          onclick="app.dispatch('SET_TRIAGE', {mode: 'Standard'})">
                          <strong>STANDARD</strong>
                     </div>
-                    <div class="selection-card ${
-                        this.state.mode === 'Bridge' ? 'active' : ''
-                    } ${!this.state.mode ? 'required-hint' : ''}" 
+                    <div class="selection-card ${this.state.mode === 'Bridge' ? 'active' : ''
+            } ${!this.state.mode ? 'required-hint' : ''}" 
                          onclick="app.dispatch('SET_TRIAGE', {mode: 'Bridge'})">
                          <strong>BRIDGE</strong>
                     </div>
                 </div>
 
                 <div style="margin-top: 1rem; text-align:center;">
-                    <div id="validation-msg" class="validation-msg">${
-                        !isReady ? `Falta cargar: ${missing.join(', ')}` : ''
-                    }</div>
+                    <div id="validation-msg" class="validation-msg">${!isReady ? `Falta cargar: ${missing.join(', ')}` : ''
+            }</div>
                     <button id="triage-start-btn" class="btn btn-yes" style="margin: 0.5rem auto 0;"
                             ${!isReady ? 'disabled' : ''}
                             onclick="app.dispatch('NAVIGATE', {id: '${step.next}', label: 'Confirmar Datos'})">
@@ -425,6 +436,12 @@ class App {
     }
 
     renderStep(container, step) {
+        const isNavConnectivity = this.state.node === 'NAV_CONNECTIVITY';
+        const knownLeds = isNavConnectivity ? this.getKnownLeds() : {};
+        const wifiDone = isNavConnectivity && knownLeds['wifi'] === 'on-green';
+        const lanDone = isNavConnectivity && this.state.history.includes('6.0');
+        const DONE_FOR_OPTION = { '5.0': wifiDone, '6.0': lanDone };
+
         const div = document.createElement('div');
         div.className = 'view';
         div.innerHTML = `
@@ -433,32 +450,38 @@ class App {
                     <span>${step.case || 'DIAGNÓSTICO'}</span>
                     <span>OBJETIVO: ${step.objective || 'N/A'}</span>
                 </div>
-                ${
-                    step.action
-                        ? `<div class="instruction-card"><p class="instruction-text">${step.action}</p></div>`
-                        : ''
-                }
+                ${step.action
+                ? `<div class="instruction-card"><p class="instruction-text">${step.action}</p></div>`
+                : ''
+            }
                 <div class="dialogue-bubble"><p class="dialogue-text">${step.question}</p></div>
                 <div class="actions">
                     ${(step.options || [])
-                        .map(
-                            (opt, idx) => `
-                        <button class="btn ${
-                            opt.type === 'neutral'
-                                ? 'btn-neutral'
-                                : opt.type === 'success'
+                .map((opt, idx) => {
+                    const isDone = isNavConnectivity && !!DONE_FOR_OPTION[opt.next];
+
+                    if (isDone) {
+                        return `
+                        <button class="btn btn-done" disabled title="Diagnóstico completado">
+                            <span>✔ ${opt.label}</span>
+                            <span style="font-size:0.7rem; opacity:0.75;">[OK]</span>
+                        </button>`;
+                    }
+
+                    return `
+                        <button class="btn ${opt.type === 'neutral'
+                            ? 'btn-neutral'
+                            : opt.type === 'success'
                                 ? 'btn-yes'
                                 : 'btn-no'
                         }" 
-                                onclick="app.dispatch('NAVIGATE', {id: '${opt.next}', label: '${opt.label}'})">
+                                onclick="app.dispatch('NAVIGATE', {id: '${opt.next}', label: '${this.escapeAttr(opt.label)}'})">
                             <span>${opt.label}</span>
-                            <span style="font-size:0.75rem; opacity:0.85;">[${
-                                idx + 1
-                            }]</span>
+                            <span style="font-size:0.75rem; opacity:0.85;">[${idx + 1}]</span>
                         </button>
-                    `
-                        )
-                        .join('')}
+                    `;
+                })
+                .join('')}
                 </div>
                 <button class="btn btn-back" style="margin: 0.5rem auto 0;" onclick="app.dispatch('BACK')">Volver</button>
             </div>
@@ -497,15 +520,15 @@ class App {
 
                 <div class="actions">
                     ${(step.options || [])
-                        .map(
-                            (opt, idx) => `
-                        <button class="btn btn-yes" onclick="app.dispatch('NAVIGATE', {id: '${opt.next}', label: '${opt.label}'})">
+                .map(
+                    (opt, idx) => `
+                        <button class="btn btn-yes" onclick="app.dispatch('NAVIGATE', {id: '${opt.next}', label: '${this.escapeAttr(opt.label)}'})">
                             <span>${opt.label}</span>
                             <span style="font-size:0.75rem; opacity:0.85;">[${idx + 1}]</span>
                         </button>
                     `
-                        )
-                        .join('')}
+                )
+                .join('')}
                 </div>
                 <button class="btn btn-back" style="margin: 0.5rem auto 0;" onclick="app.dispatch('BACK')">Volver al diagnóstico</button>
             </div>
@@ -514,6 +537,10 @@ class App {
     }
 
     renderSummary(container, step) {
+        const closureNodeKey = this.state.history[this.state.history.length - 1] || this.state.node;
+        const closureNode = TREE[closureNodeKey];
+        const closureId = (closureNode && closureNode.id) ? closureNode.id : closureNodeKey;
+
         container.innerHTML = `
             <div class="view" style="justify-content: center;">
                 <div class="title-section" style="margin-bottom: 0.5rem;">
@@ -525,7 +552,7 @@ class App {
 ID SESIÓN: ${this.state.sessionId}
 ID ABONADO: ${this.state.subscriberId}
 OPERADOR: ${this.state.operatorEmail}@nuevosiglo.com.uy
-ID CIERRE: ${this.state.node}
+ID CIERRE: ${closureId}
 EQUIPO: ${this.state.model} | MODO: ${this.state.mode}
 INICIO: ${this.state.startTime.toLocaleString()}
 FINAL: ${new Date().toLocaleString()}
@@ -546,6 +573,20 @@ ${this.state.logs.join('\n')}
         `;
     }
 
+    getKnownLeds() {
+        let knownLeds = {};
+        [...this.state.history, this.state.node].forEach((nodeId) => {
+            const s = TREE[nodeId];
+            if (s && s.leds) {
+                knownLeds = { ...knownLeds, ...s.leds };
+            }
+        });
+        if (this.state.confirmedLeds) {
+            knownLeds = { ...knownLeds, ...this.state.confirmedLeds };
+        }
+        return knownLeds;
+    }
+
     renderTechnicalFooter(step) {
         const f = document.createElement('footer');
         f.className = 'app-footer';
@@ -554,32 +595,25 @@ ${this.state.logs.join('\n')}
             leds = leds.filter((l) => l !== 'INTERNET' && l !== 'WIFI');
         }
 
-        let knownLeds = {};
-        [...this.state.history, this.state.node].forEach((nodeId) => {
-            const s = TREE[nodeId];
-            if (s && s.leds) {
-                knownLeds = { ...knownLeds, ...s.leds };
-            }
-        });
+        const knownLeds = this.getKnownLeds();
 
         f.innerHTML = `
             <div class="led-monitor">
                 ${leds
-                    .filter((l) => Object.prototype.hasOwnProperty.call(knownLeds, l.toLowerCase()))
-                    .map((l) => {
-                        const key = l.toLowerCase();
-                        const status = knownLeds[key] || 'off';
-                        const isEvaluating = step.activeLed === l;
-                        return `
+                .filter((l) => Object.prototype.hasOwnProperty.call(knownLeds, l.toLowerCase()))
+                .map((l) => {
+                    const key = l.toLowerCase();
+                    const status = knownLeds[key] || 'off';
+                    const isEvaluating = step.activeLed === l;
+                    return `
                         <div class="led-item">
                             <div class="led-circle ${status} ${isEvaluating ? 'active' : ''}"></div>
-                            <span class="led-label" style="${
-                                isEvaluating ? 'color: var(--primary); font-weight: 800;' : ''
-                            }">${l}</span>
+                            <span class="led-label" style="${isEvaluating ? 'color: var(--primary); font-weight: 800;' : ''
+                        }">${l}</span>
                         </div>
                     `;
-                    })
-                    .join('')}
+                })
+                .join('')}
             </div>
         `;
         this.mount.appendChild(f);

@@ -140,7 +140,7 @@ export const TREE = {
         leds: { power: 'on-green', los: 'on-red' },
         options: [
             { label: 'Confirmar Visita Técnica', next: '6.3_SUMMARY', type: 'success' },
-            { label: 'Volver al inicio', next: '0.1', type: 'danger' }
+            { label: 'Volver al diagnóstico', next: 'ESCALATE_VISIT', type: 'danger' }
         ]
     },
 
@@ -218,7 +218,7 @@ export const TREE = {
         condition: (state) => (state.mode === 'Bridge' ? 'CASE_BRIDGE' : '4.0')
     },
     CASE_BRIDGE: {
-        id: 'BRIDGE-OK',
+        id: 'CASE_BRIDGE',
         case: 'CIERRE POR DEMARCACIÓN',
         title: 'Servicio en Bridge Validado',
         objective: 'Capa física y lógica operativas.',
@@ -294,7 +294,7 @@ export const TREE = {
         ]
     },
     NAV_CONNECTIVITY: {
-        id: 'METODO-CONEXION',
+        id: 'NAV_CONNECTIVITY',
         case: 'CONECTIVIDAD DEL CLIENTE',
         title: 'Tipo de Conexión',
         objective: 'Definir el método de acceso para continuar el diagnóstico final.',
@@ -366,7 +366,7 @@ export const TREE = {
         question: '¿Hay algún otro dispositivo que el cliente quiera revisar?',
         options: [
             { label: 'Sí, revisar otro', next: 'NAV_CONNECTIVITY', type: 'success' },
-            { label: 'No, gestión completa', next: '6.3_SUMMARY', type: 'no' }
+            { label: 'No, gestión completa', next: '6.1', type: 'no' }
         ]
     },
 
@@ -380,7 +380,7 @@ export const TREE = {
         leds: { lan: 'off' },
         activeLed: 'LAN',
         options: [
-            { label: 'Sí, puerto OK', next: '5.4', type: 'success' },
+            { label: 'Sí, puerto OK', next: '5.4', type: 'success', leds: { lan: 'on-green' } },
             { label: 'No detecta cable', next: 'ESCALATE_VISIT', type: 'danger' }
         ]
     },
@@ -394,20 +394,20 @@ export const TREE = {
     },
 
     '6.3_SUMMARY': {
-        id: 'CIERRE',
+        id: '6.3_SUMMARY',
         title: 'Resumen CRM STI',
         type: 'final'
     },
 
     ESCALATE_VISIT: {
-        id: 'N2-DERIVADO',
+        id: 'ESCALATE_VISIT',
         case: 'DERIVACIÓN TÉCNICA',
         title: 'Coordinación de Visita Técnica',
         question: '¿Confirma el envío de personal técnico al domicilio del abonado?',
         options: [{ label: 'Confirmar Visita Técnica', next: '6.3_SUMMARY', type: 'success' }]
     },
     CASE_COMMERCIAL_DEBT: {
-        id: 'CIERRE-COMERCIAL',
+        id: 'CASE_COMMERCIAL_DEBT',
         case: 'ESTADO COMERCIAL',
         title: 'Gestión por Suspensión Administrativa',
         objective: 'Notificar deuda y finalizar gestión técnica.',
@@ -416,7 +416,7 @@ export const TREE = {
         options: [{ label: 'Sí, Finalizar gestión', next: '6.3_SUMMARY', type: 'success' }]
     },
     ESCALATE_WIFI: {
-        id: 'N2-WIFI',
+        id: 'ESCALATE_WIFI',
         case: 'CASO 5: ESCALAMIENTO N2',
         title: 'Fallas en el Wi-Fi',
         objective: 'Falla persistente en la radio inalámbrica.',
@@ -425,7 +425,7 @@ export const TREE = {
         options: [{ label: 'Confirmar Visita Técnica', next: '6.3_SUMMARY', type: 'success' }]
     },
     ERR_NO_POWER: {
-        id: 'CIERRE-ELECTRICO',
+        id: 'ERR_NO_POWER',
         title: 'Asistencia por Falta de Energía',
         objective: 'Informar canales de soporte eléctrico y finalizar gestión.',
         action: 'Indique al cliente: “Para normalizar su servicio de Nuevo Siglo, es imperativo que restaure primero la energía eléctrica. Puede contactar a Telegestiones UTE al 0800 1930 o consultar con un profesional certificado que asista su instalación interna”.',
@@ -433,7 +433,7 @@ export const TREE = {
         options: [{ label: 'Sí, Finalizar gestión', next: '6.3_SUMMARY', type: 'success' }]
     },
     '6.4_ABORTED': {
-        id: 'CIERRE-ABRUPTO',
+        id: '6.4_ABORTED',
         title: 'Gestión Interrumpida',
         objective: 'Finalizar gestión por caída de llamada o desconexión.',
         action: 'Se ha solicitado el cierre abrupto de la sesión. Se procederá a generar el reporte con los pasos alcanzados hasta el momento.',
