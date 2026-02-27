@@ -1,0 +1,35 @@
+{
+  "name": "ns-sti",
+  "version": "5.8.0",
+  "description": "NS-STI: Motor de diagnóstico FTTH de Nivel 1 para Nuevo Siglo, empaquetado como SPA estática ejecutable directamente desde index.html.",
+  "main": "app.js",
+  "devDependencies": {
+    "esbuild": "^0.24.0",
+    "eslint": "^9.14.0",
+    "eslint-config-prettier": "^9.1.0",
+    "prettier": "^3.4.0",
+    "serve": "^14.2.5"
+  },
+  "scripts": {
+    "start": "npx serve .",
+    "build:bundle": "esbuild app.js --bundle --format=iife --platform=browser --target=es2017 --outfile=dist/app.bundle.js",
+    "build:assets": "node scripts/build-assets.mjs",
+    "build": "npm run build:bundle && npm run build:assets",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "validate:tree": "node scripts/validate-tree.mjs",
+    "test": "node scripts/test-tree.mjs && npm run validate:tree"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zelmartiago/ns-sti.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/zelmartiago/ns-sti/issues"
+  },
+  "homepage": "https://github.com/zelmartiago/ns-sti#readme"
+}

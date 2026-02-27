@@ -6,10 +6,12 @@ Bienvenido al repositorio de **NS-STI (Nuevo Siglo - Soporte Técnico Interactiv
 ---
 
 ## 1. Arquitectura del Sistema
-El sistema es una **Single Page Application (SPA)** construida con **Vanilla JavaScript**, lo que garantiza portabilidad absoluta y ejecución instantánea en cualquier entorno de soporte sin dependencias externas.
+El sistema es una **Single Page Application (SPA)** construida con **Vanilla JavaScript (ES Modules)**, lo que garantiza portabilidad absoluta y ejecución instantánea en cualquier entorno de soporte sin dependencias externas en tiempo de ejecución.
 
 ### Componentes Clave:
-- **Motor Nodal (`app.js`)**: Gestiona un árbol de decisiones (`TREE`) con soporte para bifurcaciones lógicas dinámicas.
+- **Shell y bootstrap (`index.html`)**: Punto de entrada estático que monta la aplicación sobre el contenedor `#app` y carga el módulo `app.js`.
+- **Motor Nodal (`app.js`)**: Gestiona un árbol de decisiones (`TREE`), el estado de sesión y el renderizado de vistas.
+- **Árbol de decisiones (`src/tree.js`)**: Configuración declarativa de todos los nodos de diagnóstico (POWER, LOS, PON, INTERNET, WIFI, LAN, cierres y escalados), incluyendo nodos lógicos (`type: "logic"`).
 - **Estado Persistente**: Utiliza `localStorage` para recuperar sesiones en caso de recarga accidental.
 - **Sistema de Auditoría**: Registra cada interacción (Pregunta -> Respuesta) con marcas de tiempo para su posterior volcado en el CRM.
 
@@ -55,16 +57,65 @@ En la parte inferior de la interfaz, un panel visual muestra el estado teórico 
 
 ### Añadir nuevos Nodos o Modelos
 - **Módems**: Modificar el objeto `CONFIG.MODELS` en `app.js`.
-- **Lógica**: Los nodos pueden ser de tipo `logic` (usando una función `condition` para decidir el siguiente paso basándose en el estado de la aplicación).
+- **Nodos de diagnóstico**: Editar o extender el árbol en `src/tree.js`. Cada nodo tiene, como mínimo, un `id`, opcionalmente `case`, `title`, `objective`, `question`, `leds`, `activeLed` y un arreglo de `options` con la forma:
+
+  ```js
+  {
+    label: 'Texto que ve el operador',
+    next: 'ID_DEL_SIGUIENTE_NODO',
+    type: 'success' | 'danger' | 'neutral' | 'no'
+  }
+  ```
+
+- **Nodos lógicos**: Los nodos de tipo `logic` no tienen `question`, sino una función `condition(state)` que devuelve el `id` del siguiente nodo a partir del estado de la aplicación.
 - **Estilos**: El archivo `styles.css` utiliza variables CSS (`:root`) para facilitar cambios de branding rápidos.
 
 ### Seguridad y Validación
 - Se implementó una sanitización básica de entradas para el Usuario Técnico y Nro. de Abonado.
 - El sistema impide el avance si no se completan los campos obligatorios del Triage.
+- El estado de la sesión se persiste en `localStorage` bajo la clave `ns_sti_state`. En entornos donde `localStorage` no esté disponible, la aplicación sigue funcionando, pero sin recuperación de sesión tras recarga.
 
 ---
 
-## 5. Requisitos de Ejecución
+## 5. Flujo de trabajo para desarrolladores
+
+### 5.1. Entorno local
+
+```bash
+npm install
+npm start   # servidor estático simple (npx serve .)
+```
+
+Abrir luego `http://localhost:3000` (o el puerto indicado por `serve`) en un navegador moderno.
+
+### 5.2. Calidad de código y tests
+
+- **Formato**:
+
+  ```bash
+  npm run format
+  ```
+
+- **Linting**:
+
+  ```bash
+  npm run lint
+  ```
+
+- **Tests y validación del árbol**:
+
+  ```bash
+  npm test
+  ```
+
+  Esto ejecuta:
+
+  - `scripts/test-tree.mjs`: tests básicos sobre el árbol y la bifurcación de modo (`MODE_BIFURCATION`).
+  - `scripts/validate-tree.mjs`: verificación estructural del `TREE` (referencias `next`, nodos lógicos, finales y nodos potencialmente huérfanos).
+
+---
+
+## 6. Requisitos de Ejecución
 - **Navegador**: Chrome, Edge o Firefox (Versiones actualizadas).
 - **Instalación**: No requiere. Abrir `index.html` directamente.
 - **Compatibilidad**: Diseñado para funcionar en resoluciones de escritorio estándar en centros de atención telefónica.
