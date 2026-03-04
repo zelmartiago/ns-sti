@@ -41,7 +41,8 @@ class App {
                 logs: [],
                 confirmedLeds: {},
                 startTime: new Date(),
-                sessionId: this.generateSessionId()
+                sessionId: this.generateSessionId(),
+                canUndo: false
             };
         }
 
@@ -108,7 +109,8 @@ class App {
         const area = document.getElementById('crm-area');
         if (!area) return;
         const btn = document.getElementById('copy-btn');
-        navigator.clipboard.writeText(area.value).then(() => {
+
+        const onSuccess = () => {
             if (!btn) return;
             const originalText = btn.innerHTML;
             btn.innerHTML = '¡Copiado!';
@@ -117,11 +119,25 @@ class App {
                 btn.innerHTML = originalText;
                 btn.classList.remove('copy-success');
             }, 2000);
-        }).catch(() => {
-            // Fallback para contextos sin HTTPS o permisos denegados
+        };
+
+        const fallbackCopy = () => {
             area.select();
-            document.execCommand('copy');
-        });
+            try {
+                document.execCommand('copy');
+                onSuccess();
+            } catch (err) {
+                console.error('Fallback: Oops, unable to copy', err);
+            }
+        };
+
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(area.value)
+                .then(onSuccess)
+                .catch(fallbackCopy);
+        } else {
+            fallbackCopy();
+        }
     }
 
     dispatch(action, data) {
@@ -177,6 +193,7 @@ class App {
 
             this.state.history.push(this.state.node);
             this.state.node = nextNodeId;
+            this.state.canUndo = true;
         }
 
         if (action === 'SET_OPERATOR') {
@@ -190,49 +207,59 @@ class App {
 
         if (action === 'SET_SUBSCRIBER') {
             this.state.subscriberId = data;
-            const btn = document.getElementById('triage-start-btn');
-            const msg = document.getElementById('validation-msg');
-            const input = document.getElementById('sub-id');
+            const btn = document.getElementById('triage-next-btn');
 
-            const isReady = this.state.subscriberId && this.state.model && this.state.mode;
+            const isReady = !!this.state.subscriberId.trim();
             if (btn) btn.disabled = !isReady;
-
-            if (msg) {
-                if (!isReady) {
-                    const missing = [];
-                    if (!this.state.subscriberId) missing.push('Nro. Abonado');
-                    if (!this.state.model) missing.push('Modelo ONT');
-                    if (!this.state.mode) missing.push('Modo Servicio');
-                    msg.innerHTML = `Falta cargar: ${missing.join(', ')}`;
-                } else {
-                    msg.innerHTML = '';
-                }
-            }
-
-            if (input) {
-                if (!this.state.subscriberId) input.classList.add('required-hint');
-                else input.classList.remove('required-hint');
-            }
 
             this.saveState();
             return;
         }
 
-        if (action === 'SET_TRIAGE') {
-            this.state = { ...this.state, ...data };
+        if (action === 'SET_TRIAGE_MODEL') {
+            this.state.model = data;
             this.saveState();
-            this.render();
+
+            const btn = document.getElementById('triage-next-btn');
+            if (btn) btn.disabled = !this.state.model;
+
+            document.querySelectorAll('.form-triage-model').forEach(el => {
+                if (el.dataset.modelId === this.state.model) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            });
+            return;
+        }
+
+        if (action === 'SET_TRIAGE_MODE') {
+            this.state.mode = data;
+            this.saveState();
+
+            const btn = document.getElementById('triage-start-btn');
+            if (btn) btn.disabled = !this.state.mode;
+
+            document.querySelectorAll('.form-triage-mode').forEach(el => {
+                if (el.dataset.modeId === this.state.mode) {
+                    el.classList.add('active');
+                } else {
+                    el.classList.remove('active');
+                }
+            });
             return;
         }
 
         if (action === 'BACK') {
-            if (this.state.history.length > 0) {
+            if (this.state.canUndo && this.state.history.length > 0) {
                 this.state.node = this.state.history.pop();
+                this.state.canUndo = false;
+                this.state.logs.push(`${new Date().toLocaleTimeString()} - ⏪ Deshizo el último paso`);
             }
         }
 
         if (action === 'RESET_CONFIRM') {
-            if (this.state.node === '0.1' || this.state.node === '0.2') {
+            if (['0.1', '0.2', '0.3', '0.4'].includes(this.state.node)) {
                 this.dispatch('RESET');
                 return;
             }
@@ -257,6 +284,58 @@ class App {
             return;
         }
 
+        if (action === 'JUMP_TO_LED') {
+            const ledStartNodes = {
+                'power': '1.0',
+                'los': '2.0',
+                'pon': '3.0',
+                'internet': '4.0',
+                'wifi': '5.0',
+                'lan': '6.0'
+            };
+
+            const targetNodeId = ledStartNodes[data.toLowerCase()];
+            if (!targetNodeId) return;
+
+            // Only allow jumping back if we have passed or are at that node in history
+            const historyIndex = this.state.history.indexOf(targetNodeId);
+
+            // If the node is not in history but is the current node, we just reset it practically
+            if (historyIndex === -1 && this.state.node !== targetNodeId) {
+                return;
+            }
+
+            if (
+                window.confirm(
+                    `¿Desea volver al diagnóstico de la luz ${data}? Se perderá el progreso posterior.`
+                )
+            ) {
+                if (historyIndex !== -1) {
+                    // Trim history up to the point we are jumping back to
+                    this.state.history = this.state.history.slice(0, historyIndex);
+                }
+
+                // Clear any confirmed LEDs that were set after this point.
+                // Rebuilding confirmed LEDs based on the new truncated history:
+                let rebuiltConfirmed = {};
+                this.state.history.forEach(nodeId => {
+                    const step = TREE[nodeId];
+                    // Also parse logs to find the chosen option to restore its specific child leds if needed?
+                    // A simpler robust way: just clear future manual confirmed state, rely on getKnownLeds defaults for past.
+                });
+                // We'll reset confirmedLeds to empty, getKnownLeds will re-fetch based on the active node and history.
+                this.state.confirmedLeds = {};
+
+                this.state.node = targetNodeId;
+                this.state.canUndo = false;
+                this.state.logs.push(`${new Date().toLocaleTimeString()} - ⏪ Volvió a diagnóstico de LED ${data}`);
+
+                this.saveState();
+                this.render();
+            }
+            return;
+        }
+
         if (action === 'RESET') {
             try {
                 localStorage.removeItem('ns_sti_state');
@@ -273,7 +352,8 @@ class App {
                 logs: [],
                 confirmedLeds: {},
                 startTime: new Date(),
-                sessionId: this.generateSessionId()
+                sessionId: this.generateSessionId(),
+                canUndo: false
             };
         }
 
@@ -299,7 +379,7 @@ class App {
             ${this.state.node !== '0.1'
                 ? `
                 <div class="header-controls">
-                    ${this.state.node !== '0.2' && step.type !== 'final'
+                    ${!['0.2', '0.3', '0.4'].includes(this.state.node) && step.type !== 'final'
                     ? `
                         <button class="btn-abort" onclick="app.dispatch('ABORT_SESSION')">
                             <span>⚠️</span> ABORTAR LLAMADA
@@ -330,7 +410,13 @@ class App {
             this.renderStart(main, step);
             this.registerKeyHandler(null);
         } else if (this.state.node === '0.2') {
-            this.renderTriage(main, step);
+            this.renderTriageSubscriber(main, step);
+            this.registerKeyHandler(null);
+        } else if (this.state.node === '0.3') {
+            this.renderTriageModel(main, step);
+            this.registerKeyHandler(null);
+        } else if (this.state.node === '0.4') {
+            this.renderTriageMode(main, step);
             this.registerKeyHandler(null);
         } else if (this.state.node === 'ESCALATE_VISIT') {
             this.renderEscalation(main, step);
@@ -382,13 +468,8 @@ class App {
         `;
     }
 
-    renderTriage(container, step) {
-        const missing = [];
-        if (!this.state.subscriberId) missing.push('Nro. Abonado');
-        if (!this.state.model) missing.push('Modelo ONT');
-        if (!this.state.mode) missing.push('Modo Servicio');
-        const isReady = missing.length === 0;
-
+    renderTriageSubscriber(container, step) {
+        const isReady = !!(this.state.subscriberId || '').trim();
         container.innerHTML = `
             <div class="view">
                 <div class="title-section">
@@ -398,20 +479,41 @@ class App {
 
                 <div class="input-group">
                     <label class="input-label">Identificador del Abonado</label>
-                    <input type="text" id="sub-id" class="subscriber-input ${!this.state.subscriberId ? 'required-hint' : ''
-            }" 
+                    <input type="text" id="sub-id" class="subscriber-input" 
                            placeholder="Número de Contrato" 
                            value="${this.state.subscriberId || ''}"
                            oninput="app.dispatch('SET_SUBSCRIBER', this.value)">
+                    <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem; text-align: center;">Por favor, ingrese el número de contrato para continuar.</p>
+                </div>
+
+                <div style="margin-top: 1.5rem; text-align:center;">
+                    <button id="triage-next-btn" class="btn btn-yes" style="margin: 0.5rem auto 0;"
+                            ${!isReady ? 'disabled' : ''}
+                            onclick="app.dispatch('NAVIGATE', {id: '${step.next}', label: 'Continuar'})">
+                        Continuar
+                    </button>
+                </div>
+                ${this.state.canUndo ? `<button class="btn btn-back" style="margin: 0.5rem auto 0;" onclick="app.dispatch('BACK')">Deshacer Último Paso</button>` : ''}
+            </div>
+        `;
+    }
+
+    renderTriageModel(container, step) {
+        const isReady = !!this.state.model;
+        container.innerHTML = `
+            <div class="view">
+                <div class="title-section">
+                    <h2>${step.title}</h2>
+                    <p>${step.desc}</p>
                 </div>
 
                 <div class="card-grid">
                     ${Object.values(CONFIG.MODELS)
                 .map(
                     (hw) => `
-                        <div class="selection-card ${this.state.model === hw.id ? 'active' : ''
-                        } ${!this.state.model ? 'required-hint' : ''}" 
-                             onclick="app.dispatch('SET_TRIAGE', {model: '${hw.id}'})">
+                        <div class="selection-card form-triage-model ${this.state.model === hw.id ? 'active' : ''
+                        }" data-model-id="${hw.id}" 
+                             onclick="app.dispatch('SET_TRIAGE_MODEL', '${hw.id}')">
                             <strong style="font-size: 1.2rem;">${hw.name}</strong>
                             <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem;">${hw.desc
                         }</p>
@@ -420,29 +522,51 @@ class App {
                 )
                 .join('')}
                 </div>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem; text-align: center;">Seleccione el equipo correspondiente para avanzar.</p>
+
+                <div style="margin-top: 1.5rem; text-align:center;">
+                    <button id="triage-next-btn" class="btn btn-yes" style="margin: 0.5rem auto 0;"
+                            ${!isReady ? 'disabled' : ''}
+                            onclick="app.dispatch('NAVIGATE', {id: '${step.next}', label: 'Continuar'})">
+                        Continuar
+                    </button>
+                </div>
+                ${this.state.canUndo ? `<button class="btn btn-back" style="margin: 0.5rem auto 0;" onclick="app.dispatch('BACK')">Deshacer Último Paso</button>` : ''}
+            </div>
+        `;
+    }
+
+    renderTriageMode(container, step) {
+        const isReady = !!this.state.mode;
+        container.innerHTML = `
+            <div class="view">
+                <div class="title-section">
+                    <h2>${step.title}</h2>
+                    <p>${step.desc}</p>
+                </div>
 
                 <div class="card-grid" style="grid-template-columns: 1fr 1fr; margin-top: 1rem;">
-                    <div class="selection-card ${this.state.mode === 'Standard' ? 'active' : ''
-            } ${!this.state.mode ? 'required-hint' : ''}" 
-                         onclick="app.dispatch('SET_TRIAGE', {mode: 'Standard'})">
+                    <div class="selection-card form-triage-mode ${this.state.mode === 'Standard' ? 'active' : ''
+            }" data-mode-id="Standard"
+                         onclick="app.dispatch('SET_TRIAGE_MODE', 'Standard')">
                          <strong>STANDARD</strong>
                     </div>
-                    <div class="selection-card ${this.state.mode === 'Bridge' ? 'active' : ''
-            } ${!this.state.mode ? 'required-hint' : ''}" 
-                         onclick="app.dispatch('SET_TRIAGE', {mode: 'Bridge'})">
+                    <div class="selection-card form-triage-mode ${this.state.mode === 'Bridge' ? 'active' : ''
+            }" data-mode-id="Bridge"
+                         onclick="app.dispatch('SET_TRIAGE_MODE', 'Bridge')">
                          <strong>BRIDGE</strong>
                     </div>
                 </div>
+                <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.5rem; text-align: center;">Seleccione el modo del servicio para comenzar.</p>
 
-                <div style="margin-top: 1rem; text-align:center;">
-                    <div id="validation-msg" class="validation-msg">${!isReady ? `Falta cargar: ${missing.join(', ')}` : ''
-            }</div>
+                <div style="margin-top: 1.5rem; text-align:center;">
                     <button id="triage-start-btn" class="btn btn-yes" style="margin: 0.5rem auto 0;"
                             ${!isReady ? 'disabled' : ''}
-                            onclick="app.dispatch('NAVIGATE', {id: '${step.next}', label: 'Confirmar Datos'})">
+                            onclick="app.dispatch('NAVIGATE', {id: '${step.next}', label: 'Comenzar Diagnóstico'})">
                         Comenzar Diagnóstico
                     </button>
                 </div>
+                ${this.state.canUndo ? `<button class="btn btn-back" style="margin: 0.5rem auto 0;" onclick="app.dispatch('BACK')">Deshacer Último Paso</button>` : ''}
             </div>
         `;
     }
@@ -495,7 +619,7 @@ class App {
                 })
                 .join('')}
                 </div>
-                <button class="btn btn-back" style="margin: 0.5rem auto 0;" onclick="app.dispatch('BACK')">Volver</button>
+                ${this.state.canUndo ? `<button class="btn btn-back" style="margin: 0.5rem auto 0;" onclick="app.dispatch('BACK')">Deshacer Último Paso</button>` : ''}
             </div>
         `;
         container.appendChild(div);
@@ -542,7 +666,7 @@ class App {
                 )
                 .join('')}
                 </div>
-                <button class="btn btn-back" style="margin: 0.5rem auto 0;" onclick="app.dispatch('BACK')">Volver al diagnóstico</button>
+                ${this.state.canUndo ? `<button class="btn btn-back" style="margin: 0.5rem auto 0;" onclick="app.dispatch('BACK')">Deshacer Último Paso</button>` : ''}
             </div>
         `;
         container.appendChild(div);
@@ -609,6 +733,15 @@ ${this.state.logs.join('\n')}
 
         const knownLeds = this.getKnownLeds();
 
+        const ledStartNodes = {
+            'power': '1.0',
+            'los': '2.0',
+            'pon': '3.0',
+            'internet': '4.0',
+            'wifi': '5.0',
+            'lan': '6.0'
+        };
+
         f.innerHTML = `
             <div class="led-monitor">
                 ${leds
@@ -617,8 +750,11 @@ ${this.state.logs.join('\n')}
                     const key = l.toLowerCase();
                     const status = knownLeds[key] || 'off';
                     const isEvaluating = step.activeLed === l;
+                    const canJump = this.state.history.includes(ledStartNodes[key]) || this.state.node === ledStartNodes[key];
+                    const onClick = canJump && !isEvaluating ? `onclick="app.dispatch('JUMP_TO_LED', '${l}')"` : '';
+
                     return `
-                        <div class="led-item">
+                        <div class="led-item ${canJump && !isEvaluating ? 'led-clickable' : ''}" ${onClick} title="${canJump && !isEvaluating ? 'Volver a diagnóstico de esta luz' : ''}">
                             <div class="led-circle ${status} ${isEvaluating ? 'active' : ''}"></div>
                             <span class="led-label" style="${isEvaluating ? 'color: var(--primary); font-weight: 800;' : ''
                         }">${l}</span>

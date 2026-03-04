@@ -512,6 +512,23 @@ body {
     flex-direction: column;
     align-items: center;
     gap: 0.3rem;
+    transition: transform 0.2s ease;
+}
+
+.led-item.led-clickable {
+    cursor: pointer;
+}
+
+.led-item.led-clickable:hover {
+    transform: translateY(-3px);
+}
+
+.led-item.led-clickable .led-label {
+    transition: color 0.2s;
+}
+
+.led-item.led-clickable:hover .led-label {
+    color: var(--primary);
 }
 
 .led-circle {
@@ -543,6 +560,52 @@ body {
 
 .led-circle.on-red.active {
     --pulse-color: var(--danger);
+}
+
+.led-circle.on-warn {
+    background: var(--accent) !important;
+    animation: led-blink-green 0.8s infinite;
+}
+
+.led-circle.on-warn.active {
+    --pulse-color: var(--accent);
+    animation: led-blink-green-active 1.2s infinite;
+}
+
+@keyframes led-blink-green {
+
+    0%,
+    49% {
+        opacity: 1;
+        box-shadow: 0 0 12px var(--accent);
+    }
+
+    50%,
+    100% {
+        opacity: 0.2;
+        box-shadow: none;
+    }
+}
+
+@keyframes led-blink-green-active {
+
+    0%,
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 6px 2px var(--accent);
+        opacity: 1;
+    }
+
+    25%,
+    75% {
+        opacity: 0.2;
+    }
+
+    50% {
+        transform: scale(1.5);
+        box-shadow: 0 0 20px 7px var(--accent);
+        opacity: 0.8;
+    }
 }
 
 .led-circle.off.active,

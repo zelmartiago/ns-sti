@@ -8,9 +8,23 @@ export const TREE = {
     },
     '0.2': {
         id: '0.2',
-        case: 'TRIAJE PRIMARIO',
-        title: 'Configuración del Servicio',
-        desc: 'Seleccione el modelo del equipo y el modo de operación.',
+        case: 'TRIAJE PRIMARIO (1/3)',
+        title: 'Identificación',
+        desc: 'Ingrese el número de contrato del abonado.',
+        next: '0.3'
+    },
+    '0.3': {
+        id: '0.3',
+        case: 'TRIAJE PRIMARIO (2/3)',
+        title: 'Selección de Hardware',
+        desc: 'Seleccione el modelo de ONT instalado en el domicilio.',
+        next: '0.4'
+    },
+    '0.4': {
+        id: '0.4',
+        case: 'TRIAJE PRIMARIO (3/3)',
+        title: 'Modo de Operación',
+        desc: 'Seleccione el modo en el que opera el servicio.',
         next: '1.0'
     },
 
@@ -164,7 +178,7 @@ export const TREE = {
         objective: 'Forzar nueva sesión de sincronismo mediante reinicio eléctrico.',
         action: 'Indique al cliente: “Presione el botón rojo ON/OFF en la parte trasera para apagar y volver a encender el equipo”. Alternativa: desenchufar fuente 10s. Espere 30 segundos tras el reinicio.',
         question: '¿La luz LED PON está encendida y fija?',
-        leds: { power: 'on-green', los: 'off', pon: 'off' },
+        leds: { power: 'on-green', los: 'off', pon: 'on-warn' },
         activeLed: 'PON',
         options: [
             { label: 'Sí, quedó fija', next: 'MODE_BIFURCATION', type: 'success' },
