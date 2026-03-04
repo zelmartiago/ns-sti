@@ -2,7 +2,7 @@ export const TREE = {
     '0.1': {
         id: '0.1',
         case: 'ATENCIÓN DE LLAMADA',
-        title: 'Gestión FTTH',
+        title: 'Soporte Interactivo',
         desc: 'Inicie el protocolo de soporte interactivo para asistencia técnica.',
         next: '0.2'
     },
@@ -374,12 +374,35 @@ export const TREE = {
         ]
     },
     '5.4': {
-        id: '5.4',
+        type: 'logic',
+        condition: (state) => {
+            let knownLeds = {};
+            [...state.history, state.node].forEach((nodeId) => {
+                const s = TREE[nodeId];
+                if (s && s.leds) {
+                    knownLeds = { ...knownLeds, ...s.leds };
+                }
+            });
+            if (state.confirmedLeds) {
+                knownLeds = { ...knownLeds, ...state.confirmedLeds };
+            }
+
+            const wifiDone = knownLeds['wifi'] === 'on-green';
+            const lanDone = state.history.includes('6.0') || state.node === '6.0';
+
+            if (wifiDone && lanDone) {
+                return '6.1';
+            }
+            return '5.4_QUESTION';
+        }
+    },
+    '5.4_QUESTION': {
+        id: '5.4_QUESTION',
         title: 'Verificación de Otros Dispositivos',
         objective: 'Asegurar la conectividad total en el domicilio.',
         question: '¿Hay algún otro dispositivo que el cliente quiera revisar?',
         options: [
-            { label: 'Sí, revisar otro', next: 'NAV_CONNECTIVITY', type: 'success' },
+            { label: 'Sí, revisar otro', next: 'NAV_CONNECTIVITY', type: 'neutral' },
             { label: 'Gestión completa', next: '6.1', type: 'success' }
         ]
     },
